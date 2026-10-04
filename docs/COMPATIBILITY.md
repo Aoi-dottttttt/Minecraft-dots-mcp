@@ -29,6 +29,32 @@ This is a conservative frontend error-classification fix within IPC version 1;
 tool schemas, backend code and existing backend fences are unchanged. It does
 not reconnect, replay requests, restart a backend or update a running session.
 
+## Open wooden doors in verified movement
+
+`move-to-position` and the block-tool approach actions using `moveAndVerify`
+recognize consistently open, matching wooden-door halves with real collision
+shapes leaving a central 0.6-block-wide corridor. A temporary first-party
+adapter corrects pathfinder 2.4.5 planning metadata and post-processed door
+waypoints. It preserves the existing movement policy's avoidance/exclusion
+rules, permits only same-height straight entry/exit, checks adjacent swept
+body cells to reject corner cutting, and retains real world collision boxes. It never opens doors, digs, places blocks or changes entity
+position. Its listener and owned movement policy are restored only after the
+underlying `goto` settles, including cancellation and timeout; later replacement
+policies are not overwritten.
+
+Closed, inconsistent or unfamiliar door states/shapes, iron/copper doors and
+sideways/diagonal crossings remain blocked. Raised/slab thresholds and modded
+doors are outside this repair. A door closing after planning is still a real
+physics obstacle; the next search rejects it. The adapter does not add automatic
+reopening or change upstream block-state invalidation.
+
+The separate native `goto` and `get_path_to` tools do not use this helper and
+are not changed. Tool names, descriptions, argument schemas, response format,
+15-second default / 60-second maximum movement timeout, action serialization,
+IPC and dependency locks are unchanged. Offline fixtures use the repository's
+locked Minecraft 1.21.1 data and actual A*/collision/controller implementations;
+they do not establish real-server acceptance of this implementation.
+
 ## Change policy
 
 Schema or semantic changes require a documented compatibility decision, regression fixture and maintainer review. Breaking tool/IPC contracts require a version boundary and migration notes. Do not infer compatibility solely from matching tool names or package version. The public candidate is 3.1.1-rc.1 so it cannot be confused with the historical base.
