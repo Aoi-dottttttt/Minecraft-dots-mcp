@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "minecraft": {
+      "command": "node",
+      "args": [
+        "/absolute/path/to/minecraft-mcp/runtime/minecraft-frontend.mjs",
+        "--attach",
+        "/absolute/path/to/private-game-state"
+      ]
+    }
+  }
+}

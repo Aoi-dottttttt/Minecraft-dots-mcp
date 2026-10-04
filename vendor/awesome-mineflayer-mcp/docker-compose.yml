@@ -1,0 +1,36 @@
+# Throwaway local Minecraft server for development & manual testing.
+#
+#   docker compose up -d          # start an offline-mode 1.20.4 server
+#   docker compose logs -f        # watch it boot (wait for "Done")
+#
+# Then point the bot at it:
+#   connect_bot { host: "localhost", username: "DevBot", auth: "offline" }
+#
+#   docker compose down -v        # stop and delete the world
+#
+# This is offline-mode (ONLINE_MODE=FALSE) so the bot can join without a
+# Microsoft account. Do NOT expose it to the public internet.
+
+services:
+  minecraft:
+    image: itzg/minecraft-server
+    container_name: mineflayer-mcp-dev-server
+    tty: true
+    stdin_open: true
+    ports:
+      - "25565:25565"
+    environment:
+      EULA: "TRUE"
+      ONLINE_MODE: "FALSE"
+      TYPE: "VANILLA"
+      VERSION: "1.20.4"
+      DIFFICULTY: "peaceful"
+      MEMORY: "2G"
+      # Helpful for deterministic testing (matches eval/fixture.md):
+      LEVEL_TYPE: "minecraft:flat"
+      SPAWN_PROTECTION: "0"
+    volumes:
+      - mc-data:/data
+
+volumes:
+  mc-data:

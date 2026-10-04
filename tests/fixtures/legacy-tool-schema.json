@@ -1,0 +1,223 @@
+[
+  {
+    "name": "can-craft",
+    "properties": [
+      "itemName"
+    ],
+    "required": [
+      "itemName"
+    ]
+  },
+  {
+    "name": "craft-item",
+    "properties": [
+      "amount",
+      "outputItem"
+    ],
+    "required": [
+      "outputItem"
+    ]
+  },
+  {
+    "name": "detect-gamemode",
+    "properties": [],
+    "required": []
+  },
+  {
+    "name": "dig-block",
+    "properties": [
+      "x",
+      "y",
+      "z"
+    ],
+    "required": [
+      "x",
+      "y",
+      "z"
+    ]
+  },
+  {
+    "name": "equip-item",
+    "properties": [
+      "destination",
+      "itemName"
+    ],
+    "required": [
+      "itemName"
+    ]
+  },
+  {
+    "name": "find-blocks",
+    "properties": [
+      "blockType",
+      "count",
+      "maxDistance"
+    ],
+    "required": [
+      "blockType"
+    ]
+  },
+  {
+    "name": "find-entity",
+    "properties": [
+      "maxDistance",
+      "type"
+    ],
+    "required": []
+  },
+  {
+    "name": "find-item",
+    "properties": [
+      "nameOrType"
+    ],
+    "required": [
+      "nameOrType"
+    ]
+  },
+  {
+    "name": "fly-to",
+    "properties": [
+      "x",
+      "y",
+      "z"
+    ],
+    "required": [
+      "x",
+      "y",
+      "z"
+    ]
+  },
+  {
+    "name": "get-block-info",
+    "properties": [
+      "x",
+      "y",
+      "z"
+    ],
+    "required": [
+      "x",
+      "y",
+      "z"
+    ]
+  },
+  {
+    "name": "get-position",
+    "properties": [],
+    "required": []
+  },
+  {
+    "name": "get-recipe",
+    "properties": [
+      "itemName"
+    ],
+    "required": [
+      "itemName"
+    ]
+  },
+  {
+    "name": "jump",
+    "properties": [],
+    "required": []
+  },
+  {
+    "name": "list-inventory",
+    "properties": [],
+    "required": []
+  },
+  {
+    "name": "list-recipes",
+    "properties": [
+      "outputItem"
+    ],
+    "required": []
+  },
+  {
+    "name": "look-at",
+    "properties": [
+      "x",
+      "y",
+      "z"
+    ],
+    "required": [
+      "x",
+      "y",
+      "z"
+    ]
+  },
+  {
+    "name": "move-in-direction",
+    "properties": [
+      "direction",
+      "duration"
+    ],
+    "required": [
+      "direction"
+    ]
+  },
+  {
+    "name": "move-to-position",
+    "properties": [
+      "range",
+      "timeoutMs",
+      "x",
+      "y",
+      "z"
+    ],
+    "required": [
+      "x",
+      "y",
+      "z"
+    ]
+  },
+  {
+    "name": "place-block",
+    "properties": [
+      "faceDirection",
+      "x",
+      "y",
+      "z"
+    ],
+    "required": [
+      "x",
+      "y",
+      "z"
+    ]
+  },
+  {
+    "name": "read-chat",
+    "properties": [
+      "count"
+    ],
+    "required": []
+  },
+  {
+    "name": "send-chat",
+    "properties": [
+      "message"
+    ],
+    "required": [
+      "message"
+    ]
+  },
+  {
+    "name": "smelt-item",
+    "properties": [
+      "fuelCount",
+      "fuelItem",
+      "inputCount",
+      "inputItem",
+      "takeOutput",
+      "timeoutMs",
+      "x",
+      "y",
+      "z"
+    ],
+    "required": [
+      "fuelItem",
+      "inputItem",
+      "x",
+      "y",
+      "z"
+    ]
+  }
+]

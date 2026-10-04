@@ -1,0 +1,4919 @@
+{
+  "server": {
+    "name": "minecraft-mcp-server-minecraft",
+    "version": "3.1.1-rc.1"
+  },
+  "tools": [
+    {
+      "name": "get-position",
+      "description": "Get the current position of the bot",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "move-to-position",
+      "description": "Move the bot to a specific position",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number",
+            "description": "X coordinate"
+          },
+          "y": {
+            "type": "number",
+            "description": "Y coordinate"
+          },
+          "z": {
+            "type": "number",
+            "description": "Z coordinate"
+          },
+          "range": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 25000
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "look-at",
+      "description": "Make the bot look at a specific position",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number",
+            "description": "X coordinate"
+          },
+          "y": {
+            "type": "number",
+            "description": "Y coordinate"
+          },
+          "z": {
+            "type": "number",
+            "description": "Z coordinate"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "jump",
+      "description": "Make the bot jump",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "move-in-direction",
+      "description": "Move the bot in a specific direction for a duration",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "direction": {
+            "type": "string",
+            "enum": [
+              "forward",
+              "back",
+              "left",
+              "right"
+            ],
+            "description": "Direction to move"
+          },
+          "duration": {
+            "type": "integer",
+            "minimum": 50,
+            "maximum": 4000
+          }
+        },
+        "required": [
+          "direction"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "place-block",
+      "description": "Place a block at the specified position",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number",
+            "description": "X coordinate"
+          },
+          "y": {
+            "type": "number",
+            "description": "Y coordinate"
+          },
+          "z": {
+            "type": "number",
+            "description": "Z coordinate"
+          },
+          "faceDirection": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down",
+              "north",
+              "south",
+              "east",
+              "west"
+            ],
+            "description": "Direction to place against (default: 'down')"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "dig-block",
+      "description": "Dig a block at the specified position",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number",
+            "description": "X coordinate"
+          },
+          "y": {
+            "type": "number",
+            "description": "Y coordinate"
+          },
+          "z": {
+            "type": "number",
+            "description": "Z coordinate"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get-block-info",
+      "description": "Get information about a block at the specified position",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number",
+            "description": "X coordinate"
+          },
+          "y": {
+            "type": "number",
+            "description": "Y coordinate"
+          },
+          "z": {
+            "type": "number",
+            "description": "Z coordinate"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "find-blocks",
+      "description": "Find one or more nearby blocks of a specific type",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "blockType": {
+            "type": "string",
+            "description": "Type of block to find"
+          },
+          "maxDistance": {
+            "type": "number",
+            "description": "Maximum search distance (default: 16)"
+          },
+          "count": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "description": "Maximum number of blocks to return (default: 1; values above 256 are clamped)"
+          }
+        },
+        "required": [
+          "blockType"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "list-inventory",
+      "description": "List all items in the bot's inventory",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "find-item",
+      "description": "Find a specific item in the bot's inventory",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "nameOrType": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name or type of item to find"
+          }
+        },
+        "required": [
+          "nameOrType"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "equip-item",
+      "description": "Equip a specific item",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "itemName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name of the item to equip"
+          },
+          "destination": {
+            "type": "string",
+            "enum": [
+              "hand",
+              "head",
+              "torso",
+              "legs",
+              "feet",
+              "off-hand"
+            ],
+            "description": "Where to equip the item (default: 'hand')"
+          }
+        },
+        "required": [
+          "itemName"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "list-recipes",
+      "description": "List all available crafting recipes the bot can make with current inventory",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "outputItem": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Optional: filter recipes by output item name"
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "craft-item",
+      "description": "Craft an item using a crafting recipe",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "outputItem": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name of the item to craft"
+          },
+          "amount": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16,
+            "description": "Number of times to craft (default: 1)"
+          }
+        },
+        "required": [
+          "outputItem"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get-recipe",
+      "description": "Get detailed information about a specific recipe",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "itemName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name of the item to get recipe for"
+          }
+        },
+        "required": [
+          "itemName"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "can-craft",
+      "description": "Check if the bot can craft a specific item with current inventory",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "itemName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name of the item to check"
+          }
+        },
+        "required": [
+          "itemName"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "find-entity",
+      "description": "Find the nearest entity of a specific type",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of entity to find (empty for any entity)"
+          },
+          "maxDistance": {
+            "type": "number",
+            "description": "Maximum search distance (default: 16)"
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "detect-gamemode",
+      "description": "Detect the gamemode on game",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "smelt-item",
+      "description": "Smelt items using a furnace-like block",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number",
+            "description": "X coordinate"
+          },
+          "y": {
+            "type": "number",
+            "description": "Y coordinate"
+          },
+          "z": {
+            "type": "number",
+            "description": "Z coordinate"
+          },
+          "inputItem": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name of item to smelt"
+          },
+          "inputCount": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 64,
+            "description": "Amount of input to smelt (default: 1)"
+          },
+          "fuelItem": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name of fuel item"
+          },
+          "fuelCount": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 64,
+            "description": "Amount of fuel to use (default: 1)"
+          },
+          "takeOutput": {
+            "type": "boolean",
+            "description": "Whether to take output when ready (default: true)"
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 50,
+            "maximum": 120000,
+            "description": "Timeout waiting for output in ms (default: 60000)"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z",
+          "inputItem",
+          "fuelItem"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "send-chat",
+      "description": "Send a chat message in-game",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 220
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "read-chat",
+      "description": "Get recent chat messages from players",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "number",
+            "description": "Number of recent messages to retrieve (default: 10, max: 100)"
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get-session-status",
+      "description": "Read MCPBot connection, health, inventory and protocol progress. Never reconnects.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "inspect-nearby",
+      "description": "Observe nearby entities and a heightmap; player text is untrusted game data.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "radius": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "consume-food",
+      "description": "Eat a safe food already carried by MCPBot.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "itemName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "itemName"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "attack-mob",
+      "description": "One ordinary survival attack on a non-player mob in reach.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "entityId": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "entityId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "stop-movement",
+      "description": "Stop active work and clear controls without disconnecting; acknowledge after old work settles.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "respawn-player",
+      "description": "Respawn MCPBot after death in the existing game session.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "disconnect-player",
+      "description": "Quit this MCPBot session when the user asks to stop.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_state",
+      "description": "Snapshot the bot's own state: position, velocity, orientation, health/food, gamemode, dimension, held item, time/weather, control state and active effects. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string",
+            "enum": [
+              "concise",
+              "detailed"
+            ]
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_inventory",
+      "description": "List the bot's inventory: held item/slot, all carried items, armor slots, off-hand, and free/total slot counts. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string",
+            "enum": [
+              "concise",
+              "detailed"
+            ]
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_observation",
+      "description": "One-call situational snapshot for an agent's observe loop: connection status, self vitals/position, held item + inventory, nearby entities, and recent/new events. Replaces calling get_state + get_inventory + list_entities + get_events separately. Pass `since` (a prior events.nextSince) to get only new events; otherwise a recent tail is returned with nextSince to start paginating. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "includeEntities": {
+            "type": "boolean"
+          },
+          "entityRadius": {
+            "type": "number"
+          },
+          "entityLimit": {
+            "type": "number"
+          },
+          "includeEvents": {
+            "type": "boolean"
+          },
+          "since": {
+            "type": "number"
+          },
+          "eventLimit": {
+            "type": "number"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "concise",
+              "detailed"
+            ]
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "list_players",
+      "description": "List players currently visible in the tablist with username, display name, gamemode, ping and (if tracked) entity id/position. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "list_entities",
+      "description": "List nearby tracked entities, nearest-first, filtered by type/kind/mobType/username/name and/or maxDistance. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "mobType": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "maxDistance": {
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "concise",
+              "detailed"
+            ]
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "find_nearest_entity",
+      "description": "Find the single nearest tracked entity matching the given filter. Returns {found:false} if none match. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "mobType": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "maxDistance": {
+            "type": "number"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "concise",
+              "detailed"
+            ]
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_entity_details",
+      "description": "Get full details for a single tracked entity by its network id. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "entityId": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "entityId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_scoreboards",
+      "description": "List active scoreboards with their name, title and items ({name,value}). Optionally filter to a single display slot. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "displaySlot": {
+            "type": "string"
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_teams",
+      "description": "List scoreboard teams with friendlyFire, nameTagVisibility, color, prefix, suffix and members. Optionally filter to one team. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "teamName": {
+            "type": "string"
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_boss_bars",
+      "description": "List active boss bars with title, health, color, dividers and flags. Returns [] if none. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_control_states",
+      "description": "Return the bot's seven movement control booleans: forward, back, left, right, jump, sprint, sneak. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_chat_patterns",
+      "description": "List the bot's registered chat patterns ({name?, type?, description?, pattern}). Pattern regexes are stringified. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "support_feature",
+      "description": "Check whether a named protocol feature is supported on the connected server/version (via minecraft-data feature flags). Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "featureName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "featureName"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "pathfinder_status",
+      "description": "Report the pathfinder's current activity: isMoving, isMining, isBuilding, and whether a goal is set. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_settings",
+      "description": "Return the bot's current game settings (view distance, chat flags, skin parts, etc.). Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_physics",
+      "description": "Return whether physics is enabled plus the physics constants (gravity, speeds, etc.) as primitive fields. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_loaded_plugins",
+      "description": "Report which mineflayer ecosystem plugins are attached to the bot. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_block_at",
+      "description": "Inspect the block at a world coordinate. Returns name/position and (detailed) hardness, diggability, line-of-sight, estimated dig time and sign text. Returns name 'air'/null-ish if the chunk is unloaded. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "extraInfos": {
+            "type": "boolean"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "concise",
+              "detailed"
+            ]
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "find_blocks",
+      "description": "Search for nearby blocks matching a block name (or list of names), nearest-first. Returns positions; set returnClosestBlock to also get the full closest block. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "matching": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "maxDistance": {
+            "type": "number"
+          },
+          "count": {
+            "type": "number"
+          },
+          "point": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "returnClosestBlock": {
+            "type": "boolean"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "concise",
+              "detailed"
+            ]
+          }
+        },
+        "required": [
+          "matching"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_cursor_target",
+      "description": "Raycast from the bot's eyes along its look direction. Returns the first block hit and (if includeEntity) the entity being aimed at. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "maxDistance": {
+            "type": "number"
+          },
+          "includeEntity": {
+            "type": "boolean"
+          },
+          "entityMaxDistance": {
+            "type": "number"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "concise",
+              "detailed"
+            ]
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_blocks_in_region",
+      "description": "Scan a bounded box [min..max] (inclusive) and return non-air blocks, optionally filtered to specific block names. Volume is capped at 32768 blocks; shrink the box if you hit the cap. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "min": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "max": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "matching": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "includeAir": {
+            "type": "boolean"
+          },
+          "maxCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "min",
+          "max"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "wait_for_chunks_to_load",
+      "description": "Wait until enough chunks around the bot have loaded. Use after connect/teleport before reading the world. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "goto",
+      "description": "Navigate to a goal using the pathfinder and block until arrival (or timeout). Supports block/near/xz/nearxz/y/getToBlock/lookAtBlock/placeBlock and composite_any/composite_all/invert (nested via `goals`). Cancellable; throws NO_PATH if unreachable, TIMEOUT if it takes too long. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "goalType": {
+            "type": "string",
+            "enum": [
+              "block",
+              "near",
+              "xz",
+              "nearxz",
+              "y",
+              "getToBlock",
+              "lookAtBlock",
+              "placeBlock",
+              "composite_any",
+              "composite_all",
+              "invert"
+            ]
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "range": {
+            "type": "number"
+          },
+          "goals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "goalType": {
+                  "type": "string"
+                },
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "z": {
+                  "type": "number"
+                },
+                "range": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "goalType"
+              ]
+            }
+          },
+          "timeout": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "goalType"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "set_goal",
+      "description": "Set a pathfinder goal without waiting (fire-and-forget). The bot keeps moving toward it in the background. Use `dynamic` for goals that should recompute as the world/target changes. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "goalType": {
+            "type": "string",
+            "enum": [
+              "block",
+              "near",
+              "xz",
+              "nearxz",
+              "y",
+              "getToBlock",
+              "lookAtBlock",
+              "placeBlock",
+              "composite_any",
+              "composite_all",
+              "invert"
+            ]
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "range": {
+            "type": "number"
+          },
+          "goals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "goalType": {
+                  "type": "string"
+                },
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "z": {
+                  "type": "number"
+                },
+                "range": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "goalType"
+              ]
+            }
+          },
+          "dynamic": {
+            "type": "boolean"
+          },
+          "durationMs": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "goalType"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "flee_from",
+      "description": "Continuously move away from a world point until at least `distance` blocks away (dynamic goal). Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "distance": {
+            "type": "number"
+          },
+          "durationMs": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z",
+          "distance"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "follow_entity",
+      "description": "Continuously follow a tracked entity (by id), staying within `range` blocks. Dynamic goal; persists until changed/stopped. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "entityId": {
+            "type": "number"
+          },
+          "range": {
+            "type": "number"
+          },
+          "durationMs": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "entityId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "stop_pathfinding",
+      "description": "Stop active work and release controls; no reconnect.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_path_to",
+      "description": "Compute (but do not execute) a path to a goal and report its status/cost/timing without moving the bot. Useful to test reachability before committing to `goto`. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "goalType": {
+            "type": "string",
+            "enum": [
+              "block",
+              "near",
+              "xz",
+              "nearxz",
+              "y",
+              "getToBlock",
+              "lookAtBlock",
+              "placeBlock",
+              "composite_any",
+              "composite_all",
+              "invert"
+            ]
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "range": {
+            "type": "number"
+          },
+          "goals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "goalType": {
+                  "type": "string"
+                },
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "z": {
+                  "type": "number"
+                },
+                "range": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "goalType"
+              ]
+            }
+          },
+          "timeout": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "goalType"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "set_control_state",
+      "description": "Hold or release a single low-level movement control (forward/back/left/right/jump/sprint/sneak). Manual control; conflicts with active pathfinding. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "control": {
+            "type": "string",
+            "enum": [
+              "forward",
+              "back",
+              "left",
+              "right",
+              "jump",
+              "sprint",
+              "sneak"
+            ]
+          },
+          "state": {
+            "type": "boolean"
+          },
+          "durationMs": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "control",
+          "state"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "clear_control_states",
+      "description": "Stop active work and release controls; no reconnect.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "elytra_fly",
+      "description": "Begin elytra gliding flight. Requires equipped elytra and that the bot is already gliding; otherwise fails as UNSUPPORTED. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "wait_for_ticks",
+      "description": "Block until the given number of game ticks have elapsed (20 ticks ~= 1 second). Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ticks": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "ticks"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "look_at",
+      "description": "Aim the bot's head at a world point (x,y,z). Use `force` to snap instantly instead of turning smoothly over time. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "force": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "look",
+      "description": "Set the bot's absolute head orientation in radians (yaw, pitch). Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "yaw": {
+            "type": "number"
+          },
+          "pitch": {
+            "type": "number"
+          },
+          "force": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "yaw",
+          "pitch"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "look_at_entity",
+      "description": "Aim the bot's head at a tracked entity (by id), targeting its approximate eye height. Re-call to keep tracking a moving target. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "entityId": {
+            "type": "number"
+          },
+          "force": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "entityId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "dig",
+      "description": "Dig (break) the block at a world coordinate, equipping the best tool automatically. Set `action:\"stop\"` to abort the current dig. This is a cancellable long-running action. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "forceLook": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string",
+                "const": "ignore"
+              }
+            ]
+          },
+          "digFace": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "start",
+              "stop"
+            ]
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "place_block",
+      "description": "Place a block (or entity, e.g. boat/minecart) against a reference block's face. Equips `itemName` first if given. faceVector is the unit direction from the reference block toward the new block. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "referenceX": {
+            "type": "number"
+          },
+          "referenceY": {
+            "type": "number"
+          },
+          "referenceZ": {
+            "type": "number"
+          },
+          "faceVector": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "itemName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "asEntity": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "referenceX",
+          "referenceY",
+          "referenceZ",
+          "faceVector"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "activate_block",
+      "description": "Right-click / activate the block at a coordinate (buttons, levers, doors, chests-as-interaction, etc.). Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "direction": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "cursorPos": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "desiredState": {
+            "type": "string",
+            "enum": [
+              "open",
+              "closed",
+              "on",
+              "off"
+            ]
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "activate_entity",
+      "description": "Right-click / interact with a tracked entity (e.g. trade with a villager, mount a vehicle). Use `useHeldItem` to use the held item on it, or `position` to interact at a specific point. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "entityId": {
+            "type": "number"
+          },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "useHeldItem": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "entityId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "swing_arm",
+      "description": "Play the arm-swing animation (cosmetic / to trigger left-click interactions). Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "hand": {
+            "type": "string",
+            "enum": [
+              "left",
+              "right"
+            ]
+          },
+          "showHand": {
+            "type": "boolean"
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "pvp_attack",
+      "description": "Continuously attack a target entity using the pvp plugin (pathfinds into range and keeps swinging). Resolves when the target dies or is lost. Long-running and cancellable. Provide an entityId, or a `target` filter (type/name/username) to pick the nearest match. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "entityId": {
+            "type": "number"
+          },
+          "target": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "username": {
+                "type": "string"
+              }
+            }
+          },
+          "followRange": {
+            "type": "number"
+          },
+          "attackRange": {
+            "type": "number"
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "attack_entity",
+      "description": "Perform a single melee attack swing against a tracked entity (one-shot; does not pathfind or repeat). Use pvp_attack for sustained combat. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "entityId": {
+            "type": "number"
+          },
+          "swing": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "entityId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "pvp_stop",
+      "description": "Stop active work and release controls; no reconnect.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "pvp_configure",
+      "description": "Configure pvp plugin parameters: followRange, attackRange, viewDistance, and meleeMode ('maxDamage' waits for the weapon cooldown for max damage; 'fast' attacks as quickly as possible). Returns the current numeric config. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "followRange": {
+            "type": "number"
+          },
+          "attackRange": {
+            "type": "number"
+          },
+          "viewDistance": {
+            "type": "number"
+          },
+          "meleeMode": {
+            "type": "string",
+            "enum": [
+              "maxDamage",
+              "fast"
+            ]
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "equip_item",
+      "description": "Equip an item from inventory to a destination slot. `hand`/`off-hand` hold it; `head`/`torso`/`legs`/`feet` wear armor. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "destination": {
+            "type": "string",
+            "enum": [
+              "hand",
+              "head",
+              "torso",
+              "legs",
+              "feet",
+              "off-hand"
+            ]
+          }
+        },
+        "required": [
+          "item",
+          "destination"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "unequip_item",
+      "description": "Remove whatever is equipped at a destination slot (e.g. take off a helmet, empty the off-hand). Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "destination": {
+            "type": "string",
+            "enum": [
+              "hand",
+              "head",
+              "torso",
+              "legs",
+              "feet",
+              "off-hand"
+            ]
+          }
+        },
+        "required": [
+          "destination"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "toss_item",
+      "description": "Drop items on the ground. Provide `slot` to toss that exact inventory slot's whole stack, or `item` (+ optional `count`) to toss by item type (omitting count tosses the whole stack). Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "count": {
+            "type": "number"
+          },
+          "slot": {
+            "type": "number"
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "set_quickbar_slot",
+      "description": "Select the active hotbar slot (0-8), like scrolling the mouse wheel to a hotbar position. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "slot": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "slot"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "consume",
+      "description": "Eat or drink the currently held item (food/potion). Hold the consumable in the main hand first. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "activate_item",
+      "description": "Start or stop using the held item (right-click hold). Use action `start` to begin (e.g. draw a bow, raise a shield, eat) and `stop` to release. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "offHand": {
+            "type": "boolean"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "start",
+              "stop"
+            ]
+          },
+          "durationMs": {
+            "type": "number"
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "click_window",
+      "description": "Low-level window click. `slot` is the window slot index, `mouseButton` 0=left/1=right, `mode` 0-6 (0 normal, 1 shift, 2 number-key, 4 drop, etc). Prefer higher-level tools when possible. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "slot": {
+            "type": "number"
+          },
+          "mouseButton": {
+            "type": "number"
+          },
+          "mode": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "slot",
+          "mouseButton",
+          "mode"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "move_slot_item",
+      "description": "Move the stack in `sourceSlot` to `destSlot` within the open window/inventory. If `destSlot` is omitted, put the item away into the main inventory (out of the hotbar/crafting/armor area). Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sourceSlot": {
+            "type": "number"
+          },
+          "destSlot": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "sourceSlot"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "transfer_items",
+      "description": "Bulk-transfer a quantity of an item between slot ranges of a window. Defaults move within the player inventory (slots 9-45). Set `window` true to operate on the currently open container window instead. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "count": {
+            "type": "number"
+          },
+          "sourceStart": {
+            "type": "number"
+          },
+          "sourceEnd": {
+            "type": "number"
+          },
+          "destStart": {
+            "type": "number"
+          },
+          "destEnd": {
+            "type": "number"
+          },
+          "window": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "open_container",
+      "description": "Open a chest/barrel/shulker/dispenser/hopper at a block coordinate (x,y,z) or a container entity (entityId, e.g. a chest minecart). Keeps the window open as the active container session for read_open_container / container_deposit / container_withdraw until close_window. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "entityId": {
+            "type": "number"
+          },
+          "direction": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "cursorPos": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "read_open_container",
+      "description": "Read the contents of the currently-open container: its own slots (containerItems) and the bot's inventory slots (inventoryItems). Throws NO_WINDOW if no container is open. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "container_deposit",
+      "description": "Move items from the bot's inventory into the open container. Specify count to deposit a fixed amount, or omit to deposit all matching items. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "count": {
+            "type": "number"
+          },
+          "metadata": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "container_withdraw",
+      "description": "Move items from the open container into the bot's inventory. Specify count to withdraw a fixed amount, or omit to withdraw all matching items. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "count": {
+            "type": "number"
+          },
+          "metadata": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "close_window",
+      "description": "Close the currently-open window/container session (chest, furnace, villager, enchant, anvil). Safe to call even if nothing is open. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "open_furnace",
+      "description": "Open the furnace (or blast furnace / smoker) at the given coordinates and return its current contents. Keeps the window open for subsequent furnace_action / furnace_status calls. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "furnace_action",
+      "description": "Put items into, or take items out of, the currently-open furnace. `slot` selects input/fuel/output; `op` is put or take. Output cannot be put into. Requires an open furnace (open_furnace first). Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "slot": {
+            "type": "string",
+            "enum": [
+              "input",
+              "fuel",
+              "output"
+            ]
+          },
+          "op": {
+            "type": "string",
+            "enum": [
+              "put",
+              "take"
+            ]
+          },
+          "item": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "slot",
+          "op"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "furnace_status",
+      "description": "Read the currently-open furnace's input/fuel/output items and fuel/smelt progress (0..1). Requires an open furnace. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "smelt_item",
+      "description": "Smelt items end-to-end: open the furnace at furnacePos (or use the already-open furnace), load fuel + input, then poll until `count` outputs have been produced, fuel runs out, or the input is exhausted, collecting outputs as they appear. Cancellable. Approach: drives off the furnace `update` event with a per-wait tick timeout, re-checking progress/slots each cycle. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "furnacePos": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "input": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "fuel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "input",
+          "fuel"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "enchant_item",
+      "description": "Open the enchantment table at (x,y,z), insert an item (and lapis lazuli if available), and read or apply an enchantment offer. Omit `choice` to just return the three offers (top/middle/bottom slots 0/1/2). Provide `choice` (0-2) to apply that offer and take the enchanted item back. Requires line of sight / reach to the table and lapis lazuli in inventory to actually enchant. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "item": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "choice": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z",
+          "item"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "anvil_combine",
+      "description": "Open the anvil at (x,y,z) and combine/repair two items (or rename a single item). Identify each input either by inventory slot number (itemOneSlot/itemTwoSlot) or by item name/id (itemOne/itemTwo); slot wins if both are given. Provide only the first item plus `name` to rename. Costs experience levels; result is taken back into inventory. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "itemOneSlot": {
+            "type": "number"
+          },
+          "itemOne": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "itemTwoSlot": {
+            "type": "number"
+          },
+          "itemTwo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "open_villager",
+      "description": "Walk up to and open trading with a villager entity (by id). Returns the list of trades with their input/output items, indices, disabled flag and max uses. Use trade_with_villager to execute a trade. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "entityId": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "entityId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "trade_with_villager",
+      "description": "Execute a trade with the currently-open villager by trade index (from open_villager). `times` runs the trade repeatedly. Requires an open villager window. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "tradeIndex": {
+            "type": "number"
+          },
+          "times": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "tradeIndex"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "list_recipes",
+      "description": "List crafting recipes for an item. By default returns only recipes craftable with the bot's current inventory (recipesFor); set includeUnavailable to list every known recipe (recipesAll). Set useCraftingTable to consider table-only recipes using a crafting table within 4 blocks. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "includeUnavailable": {
+            "type": "boolean"
+          },
+          "useCraftingTable": {
+            "type": "boolean"
+          },
+          "minResultCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "craft_item",
+      "description": "Craft an item using the bot's inventory. Uses a crafting table within 4 blocks (or at craftingTablePos) when the recipe requires one. Crafts `count` times (default 1). Cancellable. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "count": {
+            "type": "number"
+          },
+          "craftingTablePos": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "collect_block",
+      "description": "Break and collect block(s) (or pick up an item-drop entity) using the collectblock plugin. `target` is a block name (collects the N nearest, see `count`), a {x,y,z} block position, or a numeric entity id (item drop). When the inventory fills, items are deposited into `chestLocations`; use `depositItems`/`keepItems` to control what gets stored. Long-running and cancellable. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  },
+                  "z": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "z"
+                ]
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "count": {
+            "type": "number"
+          },
+          "append": {
+            "type": "boolean"
+          },
+          "ignoreNoPath": {
+            "type": "boolean"
+          },
+          "chestLocations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "z": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "x",
+                "y",
+                "z"
+              ]
+            }
+          },
+          "depositItems": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "keepItems": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "cancel_collect",
+      "description": "Stop active work and release controls; no reconnect.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "set_collect_config",
+      "description": "Set persistent collectblock defaults: the chest locations to deposit into when full, and the item filter (depositItems or keepItems) used for those deposits. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "chestLocations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "z": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "x",
+                "y",
+                "z"
+              ]
+            }
+          },
+          "depositItems": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "keepItems": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "equip_tool_for_block",
+      "description": "Equip the best tool in inventory for breaking a target block. Specify the block by coordinates (x,y,z) or by blockId (nearest matching block within 64 is used). With getFromChest, retrieves a suitable tool from a configured tool chest if none is held. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "blockId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "requireHarvest": {
+            "type": "boolean"
+          },
+          "getFromChest": {
+            "type": "boolean"
+          },
+          "maxTools": {
+            "type": "number"
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "set_tool_chest_locations",
+      "description": "Configure the chest locations the tool plugin may pull tools from when equip_tool_for_block uses getFromChest. Modes: 'set' (replace, default), 'add' (append), 'clear' (remove all). Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "locations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "z": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "x",
+                "y",
+                "z"
+              ]
+            }
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "set",
+              "add",
+              "clear"
+            ]
+          }
+        },
+        "required": [
+          "locations"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_best_tool",
+      "description": "Determine the best harvest tool currently in inventory for the block at the given coordinates, without equipping it. Returns null if no tool is better than hand. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "autoeat_set_enabled",
+      "description": "Enable or disable the automatic eating behavior (eats when hunger/health drop below the configured thresholds). Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "autoeat_configure",
+      "description": "Configure auto-eat options. Only the provided fields are changed. priority selects how food is ranked; minHunger/minHealth are the thresholds that trigger auto-eating; bannedFood lists item names to never eat. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "priority": {
+            "type": "string",
+            "enum": [
+              "foodPoints",
+              "saturation",
+              "effectiveQuality",
+              "saturationRatio"
+            ]
+          },
+          "minHunger": {
+            "type": "number"
+          },
+          "minHealth": {
+            "type": "number"
+          },
+          "bannedFood": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "returnToLastItem": {
+            "type": "boolean"
+          },
+          "offhand": {
+            "type": "boolean"
+          },
+          "eatingTimeout": {
+            "type": "number"
+          },
+          "strictErrors": {
+            "type": "boolean"
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "autoeat_eat",
+      "description": "Eat a food item once, now. Optionally specify which food; otherwise the best available food is chosen by the current priority. Throws MISSING_ITEM when no suitable food is available. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "food": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "offhand": {
+            "type": "boolean"
+          },
+          "equipOldItem": {
+            "type": "boolean"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "foodPoints",
+              "saturation",
+              "effectiveQuality",
+              "saturationRatio"
+            ]
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "autoeat_cancel",
+      "description": "Stop active work and release controls; no reconnect.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "autoeat_preview",
+      "description": "Preview which inventory foods would be chosen, ranked best-first, under the given (or current) priority. Read-only. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "priority": {
+            "type": "string",
+            "enum": [
+              "foodPoints",
+              "saturation",
+              "effectiveQuality",
+              "saturationRatio"
+            ]
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "armor_equip_all",
+      "description": "Automatically equip the best available armor pieces from the bot's inventory. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "sleep",
+      "description": "Sleep in the bed at the given coordinates. Only works at night (or during a thunderstorm) with no nearby monsters, and the bed must be within reach. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "wake",
+      "description": "Wake up / get out of the bed the bot is currently sleeping in. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "mount_entity",
+      "description": "Mount a rideable entity (boat, minecart, horse, etc.) identified by its network id. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "entityId": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "entityId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "dismount",
+      "description": "Dismount from the vehicle the bot is currently riding. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "steer_vehicle",
+      "description": "Steer the currently-mounted vehicle. `left` and `forward` range from -1 to 1 (e.g. forward=1 to go ahead, left=-1 to turn right). Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "left": {
+            "type": "number"
+          },
+          "forward": {
+            "type": "number"
+          },
+          "durationMs": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "left",
+          "forward"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "fish",
+      "description": "Cast a fishing line and wait for a bite (requires a fishing rod held in hand). Resolves when a catch is reeled in. Long-running and cancellable (via cancel_task or cancel_fish). Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "timeoutMs": {
+            "type": "number"
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "cancel_fish",
+      "description": "Stop active work and release controls; no reconnect.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "write_book",
+      "description": "Write text into a book-and-quill held/located at the given inventory slot. Each array element is one page. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "slot": {
+            "type": "number"
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "slot",
+          "pages"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "update_sign",
+      "description": "Edit the text on a sign block at (x,y,z). Use `back` to write the back face. Read sign text back via get_block_at. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "text": {
+            "type": "string"
+          },
+          "back": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z",
+          "text"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "chat",
+      "description": "Send a public chat message to the server. To run a slash command use `run_command` instead. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "whisper",
+      "description": "Send a private message (whisper) to a specific player. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "message"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "tab_complete",
+      "description": "Ask the server for tab-completion suggestions for the given partial text (e.g. command arguments or player names). Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "assumeCommand": {
+            "type": "boolean"
+          },
+          "sendBlockInSight": {
+            "type": "boolean"
+          },
+          "timeout": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "remove_chat_pattern",
+      "description": "Remove a previously registered chat pattern by its name or numeric id. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "nameOrId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          }
+        },
+        "required": [
+          "nameOrId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_events",
+      "description": "Drain buffered game events (chat, deaths, block/entity changes, goal_reached, etc.). Pass the returned `nextSince` on the next call to read only new events without gaps. `dropped:true` means the buffer overflowed and some events between your `since` and now were lost. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "since": {
+            "type": "number"
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "limit": {
+            "type": "number"
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "cancel_task",
+      "description": "Stop active work and release controls; no reconnect.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "render_map",
+      "description": "Render a colored top-down map (or a horizontal cross-section) of the area around the bot as a PNG image — a lightweight schematic overview (no extra dependencies). For a real textured first-person game render, use `get_screenshot` instead. North (−Z) is up, West (−X) is left. The bot is the white dot in the center with a dark facing tick; players are cyan, hostile mobs red, passive mobs yellow, items grey. mode \"surface\" (default) shows the topmost block of each column with height shading; mode \"slice\" shows a single Y layer (great for caves/mining — air reads light, walls dark). Returns the image plus a text legend of the block types shown. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "center": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "radius": {
+            "type": "number"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "surface",
+              "slice"
+            ]
+          },
+          "sliceY": {
+            "type": "number"
+          },
+          "includeEntities": {
+            "type": "boolean"
+          },
+          "maxDim": {
+            "type": "number"
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "set_waypoint",
+      "description": "Save a named waypoint (persisted to disk, survives restarts). Omit x/y/z to capture the bot's current position. Re-using a name overwrites it. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "list_waypoints",
+      "description": "List all saved waypoints. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "delete_waypoint",
+      "description": "Delete a saved waypoint by name. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "goto_waypoint",
+      "description": "Navigate to a saved waypoint by name (pathfinds and blocks until arrival). Cancellable; throws NO_PATH if unreachable, TIMEOUT if it takes too long. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "range": {
+            "type": "number"
+          },
+          "timeout": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "clear_region",
+      "description": "Dig out every solid block in the axis-aligned box from `from` to `to` (inclusive). Closest blocks first; the bot repositions and auto-equips tools. Stops after `maxBlocks` digs (default 256). Cancellable; reports dug/skipped/failed. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "to": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "maxBlocks": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "from",
+          "to"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "dig_tunnel",
+      "description": "Dig a straight tunnel from the bot in a horizontal direction. `length` blocks long, `width` wide (centered, default 1), `height` tall (default 2 so the bot fits). Cancellable; reports progress. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "direction": {
+            "type": "string",
+            "enum": [
+              "north",
+              "south",
+              "east",
+              "west",
+              "forward"
+            ]
+          },
+          "length": {
+            "type": "number"
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "direction",
+          "length"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "dig_staircase",
+      "description": "Dig a descending staircase from the bot in a horizontal direction: each step moves one block forward and one block down, carving a `height`-tall (default 2) opening so the bot can walk down. `depth` is how many blocks to descend. Cancellable. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "direction": {
+            "type": "string",
+            "enum": [
+              "north",
+              "south",
+              "east",
+              "west",
+              "forward"
+            ]
+          },
+          "depth": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "direction",
+          "depth"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "fill_region",
+      "description": "Place `block` into every empty (air) cell of the axis-aligned box from `from` to `to`. Best-effort: the bot must have the material and be able to reach a supporting face — cells with no adjacent solid to build against are skipped. Stops after `maxBlocks` placements (default 256). Cancellable; reports placed/skipped/failed. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "to": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "block": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "maxBlocks": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "block"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "equip-inventory-slot",
+      "description": "Equip an exact authoritative inventory stack without substituting an identical hotbar stack",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "inventorySlot": {
+            "type": "integer",
+            "minimum": 9,
+            "maximum": 44
+          },
+          "destination": {
+            "type": "string",
+            "enum": [
+              "hand",
+              "head",
+              "torso",
+              "legs",
+              "feet",
+              "off-hand"
+            ],
+            "default": "hand"
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          }
+        },
+        "required": [
+          "inventorySlot"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "inspect-block-properties",
+      "description": "Inspect a loaded block and its state properties, including open/powered/crop age",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          },
+          "z": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "activate-block",
+      "description": "Open/close wooden doors, trapdoors and fence gates, or activate buttons/levers. Requires server block-state evidence; never digs a door",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          },
+          "z": {
+            "type": "integer"
+          },
+          "face": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down",
+              "north",
+              "south",
+              "east",
+              "west"
+            ]
+          },
+          "cursor": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "z": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false,
+            "description": "Local hit coordinates on the selected face"
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "desiredState": {
+            "type": "string",
+            "enum": [
+              "open",
+              "closed",
+              "on",
+              "off"
+            ]
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "use-item-on-block",
+      "description": "Right-click a block face with the selected main-hand item. Supply expected block state for verified effect; otherwise reports only request sent",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          },
+          "z": {
+            "type": "integer"
+          },
+          "itemName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "inventorySlot": {
+            "type": "integer",
+            "minimum": 9,
+            "maximum": 45,
+            "description": "Exact authoritative inventory slot; disambiguates same-name stacks"
+          },
+          "face": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down",
+              "north",
+              "south",
+              "east",
+              "west"
+            ]
+          },
+          "cursor": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "z": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false,
+            "description": "Local hit coordinates on the selected face"
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "expect": {
+            "type": "object",
+            "properties": {
+              "position": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "$ref": "#/properties/x"
+                  },
+                  "y": {
+                    "$ref": "#/properties/y"
+                  },
+                  "z": {
+                    "$ref": "#/properties/z"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "z"
+                ],
+                "additionalProperties": false
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "properties": {
+                "type": "object",
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "use-held-item",
+      "description": "Start using the main-hand or off-hand item for a bounded duration and always release it; server inventory evidence is reported separately",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "itemName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "inventorySlot": {
+            "type": "integer",
+            "minimum": 9,
+            "maximum": 45,
+            "description": "Exact authoritative inventory slot; disambiguates same-name stacks"
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "durationMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5000,
+            "description": "Always releases controls after this duration; default 1000 ms"
+          },
+          "offHand": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "stop-using-item",
+      "description": "Release held-item use; request issuance is distinct from server effect confirmation",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "sleep-in-bed",
+      "description": "Sleep in a reachable Overworld bed and wait for server-derived sleep evidence",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          },
+          "z": {
+            "type": "integer"
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "wake-up",
+      "description": "Wake and wait for server-derived confirmation",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "set-bed-respawn",
+      "description": "Interact with an Overworld bed, including daytime. Reports attempted versus server-confirmed respawn change",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          },
+          "z": {
+            "type": "integer"
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "farm-block",
+      "description": "Plant seeds on support soil, till with a hoe, bonemeal, or collect/place a bucket. Verifies resulting blocks, including seeds-to-crop names",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          },
+          "z": {
+            "type": "integer"
+          },
+          "itemName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "inventorySlot": {
+            "type": "integer",
+            "minimum": 9,
+            "maximum": 45,
+            "description": "Exact authoritative inventory slot; disambiguates same-name stacks"
+          },
+          "face": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down",
+              "north",
+              "south",
+              "east",
+              "west"
+            ]
+          },
+          "cursor": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "z": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false,
+            "description": "Local hit coordinates on the selected face"
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "plant",
+              "till",
+              "bonemeal",
+              "bucket"
+            ]
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z",
+          "action"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "use-item-on-animal",
+      "description": "Use a selected item on a nearby animal. Reports server status/inventory evidence without assuming breeding or successful taming; excludes players",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "itemName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "inventorySlot": {
+            "type": "integer",
+            "minimum": 9,
+            "maximum": 45,
+            "description": "Exact authoritative inventory slot; disambiguates same-name stacks"
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "entityId": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "entityId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "mount-entity",
+      "description": "Mount a nearby rideable entity and require server passenger/attachment evidence",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "entityId": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          }
+        },
+        "required": [
+          "entityId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "dismount-vehicle",
+      "description": "Dismount and wait for a server passenger/attachment update",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "steer-vehicle",
+      "description": "Send bounded vehicle steering, then reset input to zero; reports whether server movement was observed",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "left": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "forward": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "durationMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5000,
+            "description": "Always releases controls after this duration; default 1000 ms"
+          }
+        },
+        "required": [
+          "left",
+          "forward"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "open-container",
+      "description": "Open an in-reach block window and read fresh server-authoritative contents",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120000
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "open-furnace",
+      "description": "Open an in-reach block window and read fresh server-authoritative contents",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120000
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "open-workstation",
+      "description": "Open an in-reach block window and read fresh server-authoritative contents",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120000
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "read-open-container",
+      "description": "Read exact server window type, slot indices, player mapping and cursor",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "close-window",
+      "description": "Close a window only with an empty server-confirmed cursor; close has no server acknowledgement",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "furnace-status",
+      "description": "Read server furnace input, fuel, output and available progress properties",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "furnace-action",
+      "description": "Put or take an exact count in the open furnace using verified slot/cursor transfers",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "slot": {
+            "type": "string",
+            "enum": [
+              "input",
+              "fuel",
+              "output"
+            ]
+          },
+          "op": {
+            "type": "string",
+            "enum": [
+              "put",
+              "take"
+            ]
+          },
+          "itemName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "itemType": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "count": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120000
+          }
+        },
+        "required": [
+          "slot",
+          "op"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "container-deposit",
+      "description": "Transfer exact items in an open storage container with server-confirmed source, destination and cursor",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "itemName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "count": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120000
+          }
+        },
+        "required": [
+          "itemName"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "container-withdraw",
+      "description": "Transfer exact items in an open storage container with server-confirmed source, destination and cursor",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "itemName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "count": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120000
+          }
+        },
+        "required": [
+          "itemName"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "transfer-window-items",
+      "description": "Move exact items between explicit slot sets in the current window or player inventory; never drops overflow",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sourceSlots": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "minItems": 1,
+            "maxItems": 90
+          },
+          "destinationSlots": {
+            "$ref": "#/properties/sourceSlots"
+          },
+          "itemName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "itemType": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "count": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120000
+          }
+        },
+        "required": [
+          "sourceSlots",
+          "destinationSlots"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "click-window",
+      "description": "Verified left/right pickup click in the current window; only ordinary mode 0 is supported",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "slot": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "mouseButton": {
+            "type": "number",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120000
+          }
+        },
+        "required": [
+          "slot"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "select-window-option",
+      "description": "Select a stonecutter recipe or loom pattern by index, confirming the server-selected option and output",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "option": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120000
+          }
+        },
+        "required": [
+          "option"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "move-controls",
+      "description": "Hold a bounded combination of ordinary movement keys (for example forward+jump), then release all keys.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "controls": {
+            "type": "object",
+            "properties": {
+              "forward": {
+                "type": "boolean"
+              },
+              "back": {
+                "type": "boolean"
+              },
+              "left": {
+                "type": "boolean"
+              },
+              "right": {
+                "type": "boolean"
+              },
+              "jump": {
+                "type": "boolean"
+              },
+              "sprint": {
+                "type": "boolean"
+              },
+              "sneak": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          },
+          "durationMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4000,
+            "default": 250
+          }
+        },
+        "required": [
+          "controls"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "list-gameplay-capabilities",
+      "description": "List integrated ordinary-survival controls and verification boundaries.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "game-command",
+      "description": "Run only a typed, ordinary player command. No arbitrary slash input.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "help",
+              "list",
+              "message"
+            ]
+          },
+          "player": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_]{1,16}$"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 180
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    }
+  ]
+}

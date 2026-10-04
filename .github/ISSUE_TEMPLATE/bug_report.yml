@@ -1,0 +1,33 @@
+name: Sanitized bug report
+description: Report an MCP bug with a neutral reproduction
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: "Do not include credentials, private logs, accounts, real hostnames/IPs, chat, worlds or personal paths. Other users' reports do not authorize live access."
+  - type: textarea
+    id: versions
+    attributes:
+      label: Versions
+      description: MCP backend/frontend versions, Node version, OS, Minecraft version; no server identifiers
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal neutral reproduction
+      description: Prefer an offline fixture. Tool and argument shapes must use synthetic values
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Expected and observed behavior
+      description: Separate request completion from observed server evidence and mention uncertain outcomes
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Checks and limitations
+      description: Exact passed, failed or skipped tests; do not retry uncertain inventory operations

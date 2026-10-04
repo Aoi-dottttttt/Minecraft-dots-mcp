@@ -1,0 +1,122 @@
+{
+  "candidate": "3.1.1-rc.1",
+  "date": "2026-10-04",
+  "status": "release candidate; known limits in SECURITY.md",
+  "environment": {
+    "node": "24.19.0",
+    "npm": "11.9.0",
+    "os": "Linux"
+  },
+  "checks": {
+    "root_locked_install": {
+      "status": "passed",
+      "lifecycleScripts": false
+    },
+    "vendor_locked_install": {
+      "status": "passed_with_recovery",
+      "lifecycleScripts": false,
+      "freshFinalCiInstall": false,
+      "note": "Resource termination interrupted a fresh install. The locked install was resumed; truncated generated native dependency files were restored from official cached tarballs after SHA-512 integrity verification. npm ls and all final tests passed."
+    },
+    "vendor_build": {
+      "status": "passed"
+    },
+    "root_build": {
+      "status": "passed"
+    },
+    "root_typecheck": {
+      "status": "passed"
+    },
+    "root_lint": {
+      "status": "passed"
+    },
+    "root_unit": {
+      "status": "passed",
+      "tests": 437,
+      "nativePluginStartupRegressions": 13
+    },
+    "vendor_unit": {
+      "status": "passed",
+      "tests": 43,
+      "runner": "Vitest 4.1.11"
+    },
+    "stdio": {
+      "status": "passed",
+      "legacyTools": 22
+    },
+    "runtime_fixture": {
+      "status": "passed",
+      "integratedTools": 161
+    },
+    "synthetic_protocol": {
+      "status": "passed",
+      "minecraft": "1.21.1",
+      "protocol": 767,
+      "reconnects": 0
+    },
+    "launcher_lifecycle": {
+      "status": "passed",
+      "tests": 16
+    },
+    "daemon_lifecycle": {
+      "status": "passed",
+      "fullSyntheticControllerLifecycle": true
+    },
+    "queue_controller": {
+      "status": "passed"
+    },
+    "public_hardening": {
+      "status": "passed",
+      "regexToolsAbsent": true,
+      "privateStateRequired": true,
+      "symlinkAncestorRejected": true,
+      "exclusiveRandomReportWrites": true,
+      "configurableUsername": true
+    },
+    "source_manifest": {
+      "status": "verified"
+    },
+    "independent_security_review": {
+      "status": "incomplete"
+    },
+    "hosted_ci": {
+      "status": "not_run"
+    },
+    "real_server_acceptance": {
+      "status": "not_run"
+    },
+    "boats_end_to_end": {
+      "status": "not_run"
+    }
+  },
+  "verificationNotes": [
+    "Final aggregate npm run verify passed on the exact source and locked dependency selections.",
+    "Local Unix-socket suites were run in an environment permitting local sockets after another execution environment returned EPERM.",
+    "All automated tests used fake fixtures or synthetic loopback servers; no real server or credentials were used.",
+    "Passing offline tests does not demonstrate every catalog capability or real-server/plugin compatibility."
+  ],
+  "liveServerUsed": false,
+  "credentialsUsed": false,
+  "worldModified": false,
+  "knownDependencyAdvisories": {
+    "root": {
+      "info": 0,
+      "low": 0,
+      "moderate": 6,
+      "high": 5,
+      "critical": 0,
+      "total": 11
+    },
+    "vendor": {
+      "info": 0,
+      "low": 0,
+      "moderate": 12,
+      "high": 0,
+      "critical": 0,
+      "total": 12
+    },
+    "remainingRootHighScope": "one unpatched development-only braces/glob advisory and its dependency-chain records",
+    "securityClearance": false,
+    "details": "SECURITY.md"
+  }
+}

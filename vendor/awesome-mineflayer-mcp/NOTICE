@@ -1,0 +1,29 @@
+awesome-mineflayer-mcp
+Copyright (c) 2026 Ryker Geesaman
+
+This product is licensed under the MIT License (see LICENSE).
+
+It is built on, and at runtime depends on, the following third-party packages.
+Each is the property of its respective authors and is distributed under its own
+license (all MIT at the time of writing — consult each package for exact terms):
+
+  Model Context Protocol
+    - @modelcontextprotocol/sdk          (MIT)  https://github.com/modelcontextprotocol/typescript-sdk
+
+  Mineflayer ecosystem (PrismarineJS)
+    - mineflayer                         (MIT)  https://github.com/PrismarineJS/mineflayer
+    - mineflayer-pathfinder              (MIT)  https://github.com/PrismarineJS/mineflayer-pathfinder
+    - mineflayer-pvp                     (MIT)  https://github.com/PrismarineJS/mineflayer-pvp
+    - mineflayer-collectblock            (MIT)  https://github.com/PrismarineJS/mineflayer-collectblock
+    - mineflayer-tool                    (MIT)  https://github.com/PrismarineJS/mineflayer-tool
+    - mineflayer-auto-eat                (MIT)  https://github.com/link-discord/mineflayer-auto-eat
+    - mineflayer-armor-manager           (MIT)  https://github.com/PrismarineJS/MineflayerArmorManager
+    - minecraft-data                     (MIT)  https://github.com/PrismarineJS/minecraft-data
+    - prismarine-item                    (MIT)  https://github.com/PrismarineJS/prismarine-item
+    - vec3                               (MIT)  https://github.com/PrismarineJS/node-vec3
+
+  Validation
+    - zod                                (MIT)  https://github.com/colinhacks/zod
+
+Minecraft is a trademark of Mojang Synergies AB. This project is not affiliated
+with, endorsed by, or sponsored by Mojang or Microsoft.

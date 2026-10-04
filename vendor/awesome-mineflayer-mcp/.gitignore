@@ -1,0 +1,16 @@
+node_modules/
+dist/
+*.log
+npm-debug.log*
+.env
+.env.*
+!.env.example
+.DS_Store
+coverage/
+*.tsbuildinfo
+.vscode/
+.idea/
+
+# Local agent/editor config and internal build-orchestration scripts
+.claude/
+/scripts/*.workflow.js

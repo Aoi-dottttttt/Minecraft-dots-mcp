@@ -1,0 +1,48 @@
+<!--
+  These questions assume the seeded world in fixture.md (Minecraft 1.20.4 Classic Flat,
+  with the listed /setblock, /summon and /give commands applied, and the bot connected
+  as "EvalBot" and teleported to 50 4 48). Answers are deterministic only for that fixture.
+  Each question requires using the MCP tools (connect_bot first, then read-only tools).
+-->
+<evaluation>
+  <qa_pair>
+    <question>Connect the bot to the evaluation server and, searching within 16 blocks of coordinate (50, 4, 50), how many diamond_ore blocks are present?</question>
+    <answer>3</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>What is the block name at world coordinate (50, 4, 52)?</question>
+    <answer>crafting_table</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>What is the block name at world coordinate (50, 4, 54)?</question>
+    <answer>furnace</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>What is the block name at world coordinate (50, 4, 56)?</question>
+    <answer>chest</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>How many oak_planks are in the bot's inventory?</question>
+    <answer>4</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>How many sticks are in the bot's inventory?</question>
+    <answer>8</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>How many iron_ingot are in the bot's inventory?</question>
+    <answer>3</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>How many cow entities are tracked within 32 blocks of the bot?</question>
+    <answer>2</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>How many pig entities are tracked within 32 blocks of the bot?</question>
+    <answer>1</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Using the crafting recipe list for a stick, how many sticks does one craft of the basic plank-to-stick recipe produce?</question>
+    <answer>4</answer>
+  </qa_pair>
+</evaluation>

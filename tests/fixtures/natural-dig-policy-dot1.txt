@@ -1,0 +1,1 @@
+const natural=/^(dirt|grass_block|stone|cobblestone|deepslate|cobbled_deepslate|granite|diorite|andesite|sand|red_sand|gravel|coal_ore|iron_ore|copper_ore|deepslate_coal_ore|deepslate_iron_ore|short_grass|tall_grass|fern|large_fern|snow|clay|sugar_cane|sweet_berry_bush|brown_mushroom|red_mushroom|[a-z_]+_log|[a-z_]+_leaves)$/;

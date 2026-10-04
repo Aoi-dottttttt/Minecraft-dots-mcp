@@ -1,0 +1,29 @@
+Minecraft MCP Server, public modified source candidate 3.1.1-rc.1
+
+Based on minecraft-mcp-server 2.0.4 by Yuniko Software.
+Upstream: https://github.com/yuniko-software/minecraft-mcp-server
+Source commit: 240c8cec337ce152cc9e058ebdef511055808406
+Original Apache-2.0 license retained in LICENSE.
+
+First-party modifications include explicit one-shot startup, server-authoritative
+inventory/crafting/equipment, bounded serialized actions, persistent sessions,
+offline regressions and publication hardening. See RELEASE.md. Modified source
+files carry change notices. Package metadata, lockfiles and release documents
+are part of the modified distribution.
+
+Reusable tool modules derive from awesome-mineflayer-mcp 1.3.2,
+Copyright (c) 2026 Ryker Geesaman, MIT License.
+Upstream: https://github.com/G0Osey99/awesome-mineflayer-mcp
+Pinned source commit: 89a407ca18a4a39196c6ebe726d5208cff88a9e5
+The complete upstream MIT LICENSE and NOTICE are retained under
+vendor/awesome-mineflayer-mcp/. Dependency-only package manifest/lock changes and omitted optional renderer
+packages are documented in vendor/awesome-mineflayer-mcp/LOCAL-CHANGES.md
+and SECURITY.md.
+
+Dependencies are installed separately and retain their own licenses. The source
+archive does not include node_modules, private configuration, credentials,
+worlds, runtime logs or command queues. Upstream author/copyright names and
+provenance URLs are intentionally retained as attribution.
+
+Minecraft is a trademark of Mojang Synergies AB. This project is not affiliated
+with, endorsed by, or sponsored by Mojang or Microsoft.

@@ -1,0 +1,93 @@
+{
+  "name": "awesome-mineflayer-mcp",
+  "version": "1.3.2",
+  "mcpName": "io.github.G0Osey99/awesome-mineflayer-mcp",
+  "description": "Production-ready MCP server exposing standalone-equivalent control of a Mineflayer Minecraft bot: movement, mining, crafting, inventory, combat, chat, containers, lifecycle, and event streaming.",
+  "type": "module",
+  "bin": {
+    "awesome-mineflayer-mcp": "dist/index.js"
+  },
+  "main": "dist/lib.js",
+  "types": "dist/lib.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/lib.d.ts",
+      "import": "./dist/lib.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "setup": "node dist/index.js setup",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "docs:tools": "node scripts/gen-catalog.mjs",
+    "docs:tools:check": "node scripts/gen-catalog.mjs --check",
+    "version": "node scripts/sync-version.mjs && git add src/config.ts server.json",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "mineflayer",
+    "minecraft",
+    "bot",
+    "llm",
+    "agent"
+  ],
+  "license": "MIT",
+  "author": "Ryker Geesaman",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/G0Osey99/awesome-mineflayer-mcp.git"
+  },
+  "homepage": "https://github.com/G0Osey99/awesome-mineflayer-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/G0Osey99/awesome-mineflayer-mcp/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "minecraft-data": "^3.111.0",
+    "mineflayer": "^4.37.1",
+    "mineflayer-armor-manager": "^2.0.1",
+    "mineflayer-auto-eat": "^5.0.3",
+    "mineflayer-collectblock": "^1.6.0",
+    "mineflayer-pathfinder": "^2.4.5",
+    "mineflayer-pvp": "^1.3.2",
+    "mineflayer-tool": "^1.2.0",
+    "prismarine-item": "^1.16.0",
+    "vec3": "^0.1.10",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.10.0",
+    "eslint": "^10.6.0",
+    "globals": "^17.7.0",
+    "prettier": "^3.9.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.62.0",
+    "vitest": "4.1.11"
+  }
+}

@@ -1,0 +1,51 @@
+# Smithery (smithery.ai) deployment descriptor.
+# Lets users install/run awesome-mineflayer-mcp directly from Smithery.
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties:
+      MCP_DEFAULT_HOST:
+        type: string
+        title: Default server host
+        description: Minecraft server to auto-connect on startup (optional).
+      MCP_DEFAULT_PORT:
+        type: string
+        title: Default server port
+        description: Defaults to 25565.
+      MCP_DEFAULT_USERNAME:
+        type: string
+        title: Account name / email
+        description: In-game name (offline) or account email (microsoft).
+      MCP_DEFAULT_AUTH:
+        type: string
+        enum: ["offline", "microsoft"]
+        default: "offline"
+        title: Auth mode
+      MCP_DISABLE_GROUPS:
+        type: string
+        title: Disabled tool groups
+        description: Comma-separated tool-group keys to disable.
+      MCP_READ_ONLY:
+        type: boolean
+        default: false
+        title: Read-only / observe mode
+      MCP_COMMAND_DENY:
+        type: string
+        title: Blocked slash commands
+        description: Comma-separated; overrides the default admin-command deny list.
+      MCP_ALLOWED_HOSTS:
+        type: string
+        title: Allowed connect hosts
+        description: Comma-separated allow-list of hosts the bot may join (empty = any).
+    additionalProperties: false
+  commandFunction: |
+    (config) => ({
+      command: 'npx',
+      args: ['-y', 'awesome-mineflayer-mcp'],
+      env: Object.fromEntries(
+        Object.entries(config || {})
+          .filter(([, v]) => v !== undefined && v !== '')
+          .map(([k, v]) => [k, String(v)])
+      ),
+    })
