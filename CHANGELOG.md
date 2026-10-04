@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Preserve uncertainty for dispatched frontend calls when the daemon transport
+  fails before a response, without retrying or restarting the backend
+- Add synthetic transport-failure and controller queue-fencing regressions;
+  explicit daemon rejection and pre-dispatch validation remain certain failures
+
 ## 3.1.1-rc.1: shared-maintenance candidate
 
 - Generic per-installation bot identity and local configuration/state boundaries
