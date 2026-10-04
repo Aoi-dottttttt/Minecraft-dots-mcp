@@ -2,7 +2,9 @@
 // Queue/controller integration only, with a networkless game fixture.
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, existsSync, rmSync, readdirSync } from 'node:fs';
+import { chmodSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, existsSync, rmSync, readdirSync } from 'node:fs';
+import { once } from 'node:events';
+import net from 'node:net';
 import { join, dirname, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -27,6 +29,76 @@ const done = child => child.exitCode !== null || child.signalCode !== null;
 function call(dir, name) {
   const result = spawnSync('python3', ['runtime/call.py', '--state-dir', dir, '--timeout', '10', name], { cwd: root, env, encoding: 'utf8', timeout: 15000 });
   assert.equal(result.status, 0, result.stderr || result.stdout); return JSON.parse(result.stdout);
+}
+async function lostActionResponse(daemon) {
+  // Corrupt only one response between a real frontend/controller and the
+  // existing networkless daemon. The fixture never starts a second backend.
+  const proxyDir = join(sandbox, 'response-loss');
+  mkdirSync(proxyDir, { mode: 0o700 });
+  const manifest = json(join(daemonDir, 'session.json'));
+  const socketPath = join(proxyDir, 'control.sock');
+  const sockets = new Set();
+  let calls = 0, connections = 0;
+  const proxy = net.createServer(downstream => {
+    connections++;
+    const upstream = net.createConnection(manifest.socketPath);
+    sockets.add(downstream); sockets.add(upstream);
+    downstream.on('error', () => {}); upstream.on('error', () => {});
+    downstream.on('close', () => upstream.destroy());
+    upstream.on('close', () => downstream.destroy());
+    let requests = '', responses = '', lostId;
+    downstream.on('data', chunk => {
+      requests += chunk.toString('utf8');
+      for (;;) {
+        const end = requests.indexOf('\n'); if (end < 0) break;
+        const line = requests.slice(0, end); requests = requests.slice(end + 1);
+        const request = JSON.parse(line);
+        if (request.op === 'call') { calls++; lostId = request.id; }
+        upstream.write(line + '\n');
+      }
+    });
+    upstream.on('data', chunk => {
+      responses += chunk.toString('utf8');
+      for (;;) {
+        const end = responses.indexOf('\n'); if (end < 0) break;
+        const line = responses.slice(0, end); responses = responses.slice(end + 1);
+        const response = JSON.parse(line);
+        downstream.write(response.id === lostId ? '{invalid daemon frame\n' : line + '\n');
+      }
+    });
+  });
+  try {
+    proxy.listen(socketPath); await once(proxy, 'listening'); chmodSync(socketPath, 0o600);
+    writeFileSync(join(proxyDir, 'session.json'), JSON.stringify({ ...manifest, socketPath }), { mode: 0o600 });
+    const dir = join(sandbox, 'uncertain-controller');
+    const controller = launch(['runtime/minecraft-client.mjs', '--attach', proxyDir, '--state-dir', dir]);
+    await until(() => existsSync(join(dir, 'status.json')), 'response-loss controller ready');
+    const createdAt = Date.now();
+    const ids = ['1', '2'].map(value => String(createdAt) + '-' + value.repeat(16) + '.json');
+    for (const id of ids) writeFileSync(join(dir, 'commands', id), JSON.stringify({
+      sessionId: 'uncertain-controller', createdAt, name: 'get-position', arguments: {}
+    }), { mode: 0o600 });
+    await until(() => done(controller), 'response-loss controller exit');
+    assert.ok(existsSync(join(dir, 'uncertain.json')), 'Lost action response must persist controller uncertainty');
+    assert.equal(json(join(dir, 'uncertain.json')).automaticRetry, false);
+    const response = json(join(dir, 'responses', ids[0]));
+    if (response.result) {
+      const failure = JSON.parse(response.result.content.find(item => item.type === 'text').text);
+      assert.equal(failure.uncertain, true); assert.equal(failure.automaticRetry, false);
+    } else {
+      // Closing stdio first is also conservative: the attempted-call catch
+      // must fence the controller rather than continuing its queue.
+      assert.equal(response.uncertain, true); assert.equal(response.automaticRetry, false);
+    }
+    assert.equal(existsSync(join(dir, 'responses', ids[1])), false, 'No later queued action may execute');
+    assert.equal(calls, 1, 'One dispatch only; no retry or queue replay');
+    assert.equal(connections, 1, 'Frontend never reconnects');
+    assert.equal(done(daemon), false, 'Losing the frontend response must preserve the existing backend');
+    assert.equal(json(join(daemonDir, 'session.json')).backendPid, manifest.backendPid);
+  } finally {
+    for (const socket of sockets) socket.destroy();
+    await new Promise(resolveClose => proxy.close(resolveClose));
+  }
 }
 try {
   const daemon = launch(['runtime/minecraft-daemon.mjs', '--offline-fixture', '--state-dir', daemonDir]);
@@ -81,15 +153,18 @@ try {
   third.stdin.end();
   await until(() => done(third), 'UI owner pipe EOF detaches');
   assert.equal(done(daemon), false);
+  await lostActionResponse(daemon);
   const fourthDir = join(sandbox, 'explicit-quit-controller');
   const fourth = launch(['runtime/minecraft-client.mjs', '--attach', daemonDir, '--state-dir', fourthDir]);
   await until(() => existsSync(join(fourthDir, 'controller-status.json')), 'quit controller attached');
+  assert.equal(json(join(fourthDir, 'controller-status.json')).daemon.backend.pid, backendPid);
   const quit = call(fourthDir, 'disconnect-player');
   assert.equal(JSON.parse(quit.content.find(item => item.type === 'text').text).quitRequested, true);
   await until(() => done(daemon), 'explicit daemon stop');
   console.log(JSON.stringify({ passed: true, queueControllerReattachment: true, backendPidPreserved: true,
     oldQueuesRejected: true, detachedQueuesRejectNewCommands: true, launcherRootResolvesCurrentController: true, distinctFrontendBackendVersions: true,
     controllerDetachDoesNotQuit: true, ownerPipeEofDetaches: true, safetyToolsBypassActionLedger: true,
+    lostActionResponseFencesQueue: true, lostActionResponseNeverRetries: true,
     explicitMcpDisconnectQuitsDaemon: true, liveServerUsed: false, credentialsUsed: false }, null, 2));
 } finally {
   for (const child of children) if (!done(child)) child.kill('SIGTERM');
