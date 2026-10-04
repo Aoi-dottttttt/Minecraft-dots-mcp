@@ -19,8 +19,13 @@ const pending = new Map();
 let buffer = Buffer.alloc(0), sequence = 0, closing = false, attached = false;
 const frontendId = randomUUID();
 let server;
+function transportFailure(error, entry) {
+  // A failed write/response cannot prove whether a dispatched call ran. Copy
+  // the error per request: a concurrent status/list must not inherit its flag.
+  return Object.assign(Error(error.message), error, { uncertain: entry.op === 'call' && entry.dispatched });
+}
 function rejectPending(error) {
-  for (const entry of pending.values()) { clearTimeout(entry.timer); entry.reject(error); }
+  for (const entry of pending.values()) { clearTimeout(entry.timer); entry.reject(transportFailure(error, entry)); }
   pending.clear();
 }
 function request(op, fields = {}, timeout = 185000) {
@@ -34,9 +39,14 @@ function request(op, fields = {}, timeout = 185000) {
       // A timeout revokes this controller instead of leaving continuous actions running.
       socket.destroy();
     }, timeout);
-    pending.set(id, { resolve, reject, timer });
-    try { socket.write(encodeFrame({ id, op, ...fields })); }
-    catch (error) { clearTimeout(timer); pending.delete(id); reject(error); socket.destroy(); }
+    const entry = { resolve, reject, timer, op, dispatched: false };
+    pending.set(id, entry);
+    try {
+      const frame = encodeFrame({ id, op, ...fields });
+      entry.dispatched = true;
+      socket.write(frame);
+    }
+    catch (error) { clearTimeout(timer); pending.delete(id); reject(transportFailure(error, entry)); socket.destroy(); }
   });
 }
 socket.on('data', chunk => {
@@ -61,7 +71,7 @@ socket.on('data', chunk => {
 });
 socket.on('error', error => rejectPending(error));
 socket.on('close', () => {
-  rejectPending(Object.assign(Error('Daemon connection ended; no request was retried'), { uncertain: true }));
+  rejectPending(Error('Daemon connection ended; no request was retried'));
   if (!closing) void shutdown(1);
 });
 async function shutdown(exitCode = 0) {

@@ -40,6 +40,7 @@ runtime/process_gate.py
 scripts/publication-manifest.py
 scripts/smoke-controller.mjs
 scripts/smoke-daemon.mjs
+scripts/smoke-frontend-uncertainty.mjs
 scripts/smoke-protocol.mjs
 scripts/smoke-public-hardening.mjs
 scripts/smoke-runtime.mjs

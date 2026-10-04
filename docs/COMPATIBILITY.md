@@ -13,6 +13,22 @@ The backend reports its actual loaded version, process and session identity. A n
 
 The initial generic candidate renames runtime paths and private namespace fields. It is not promised to attach to older personalized controller state. Start a fresh approved session for the generic release; never migrate old queues or clone runtime state between players.
 
+## Frontend transport failures
+
+Once the frontend attempts to write a `call` to the daemon, a transport error,
+invalid-JSON/oversized frame, timeout or connection close before a complete
+response leaves the outcome unknown. The tool error reports `uncertain: true`
+and `automaticRetry: false`, and the file-queue controller fences later actions.
+This does not assert that the backend executed the call. Explicit daemon
+rejections retain their reported uncertainty; local validation or frame-encoding
+failures before dispatch remain `uncertain: false`. Read-only IPC status/list
+failures do not acquire a gameplay uncertainty flag merely because a call was
+pending on the same socket.
+
+This is a conservative frontend error-classification fix within IPC version 1;
+tool schemas, backend code and existing backend fences are unchanged. It does
+not reconnect, replay requests, restart a backend or update a running session.
+
 ## Change policy
 
 Schema or semantic changes require a documented compatibility decision, regression fixture and maintainer review. Breaking tool/IPC contracts require a version boundary and migration notes. Do not infer compatibility solely from matching tool names or package version. The public candidate is 3.1.1-rc.1 so it cannot be confused with the historical base.
