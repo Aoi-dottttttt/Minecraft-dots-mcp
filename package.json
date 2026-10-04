@@ -29,7 +29,7 @@
     "test:stdio": "node scripts/smoke-stdio.mjs",
     "test:protocol": "node scripts/smoke-protocol.mjs",
     "typecheck": "tsc --noEmit",
-    "verify": "npm run build && npm run typecheck && npm run lint && npm test && npm run test:stdio && npm run test:protocol && npm run test:runtime && npm run test:frontend && npm run test:launcher && npm run test:daemon && npm run test:controller && npm run test:public",
+    "verify": "npm run build && npm run typecheck && npm run lint && npm test && npm run test:doors && npm run test:stdio && npm run test:protocol && npm run test:runtime && npm run test:frontend && npm run test:launcher && npm run test:daemon && npm run test:controller && npm run test:public",
     "test:runtime": "node scripts/smoke-runtime.mjs",
     "test:launcher": "python3 scripts/test-launch-lifecycle.py",
     "test:upstream": "npm --prefix vendor/awesome-mineflayer-mcp test",
@@ -37,7 +37,8 @@
     "test:daemon": "node scripts/smoke-daemon.mjs",
     "test:controller": "node scripts/smoke-controller.mjs",
     "test:public": "node scripts/smoke-public-hardening.mjs",
-    "test:frontend": "node --experimental-vm-modules scripts/smoke-frontend-uncertainty.mjs"
+    "test:frontend": "node --experimental-vm-modules scripts/smoke-frontend-uncertainty.mjs",
+    "test:doors": "node --test --test-timeout=10000 tests/open-door-navigation.test.cjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",

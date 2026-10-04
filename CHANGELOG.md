@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Allow verified movement through consistently open wooden doors using a scoped
+  first-party pathfinding adapter, retaining real collision shapes and straight
+  entry/exit only; add locked-dependency A*/physics/controller regressions
+
 - Preserve uncertainty for dispatched frontend calls when the daemon transport
   fails before a response, without retrying or restarting the backend
 - Add synthetic transport-failure and controller queue-fencing regressions;
