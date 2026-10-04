@@ -1,12 +1,14 @@
 // Modified for 2.1.0-dot.1 release (2026-10-03). See RELEASE.md.
 import type { Bot } from 'mineflayer';
 import type { goals } from 'mineflayer-pathfinder';
+import { allowOpenWoodenDoors } from './open-door-navigation.js';
 
 export const DEFAULT_MOVE_TIMEOUT_MS = 15000;
 export const MAX_MOVE_TIMEOUT_MS = 60000;
 
 /** Cancel immediately, then retain the action lane until goto has settled. */
 export async function moveAndVerify(bot: Bot, goal: goals.Goal, timeoutMs = DEFAULT_MOVE_TIMEOUT_MS): Promise<void> {
+  const restoreMovements = allowOpenWoodenDoors(bot);
   let timer: ReturnType<typeof setTimeout> | undefined;
   let timedOut = false;
   const movement = Promise.resolve().then(() => bot.pathfinder.goto(goal));
@@ -32,5 +34,6 @@ export async function moveAndVerify(bot: Bot, goal: goals.Goal, timeoutMs = DEFA
     throw error;
   } finally {
     if (timer) clearTimeout(timer);
+    restoreMovements();
   }
 }
