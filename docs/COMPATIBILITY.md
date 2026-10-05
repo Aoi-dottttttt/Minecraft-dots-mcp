@@ -55,6 +55,41 @@ IPC and dependency locks are unchanged. Offline fixtures use the repository's
 locked Minecraft 1.21.1 data and actual A*/collision/controller implementations;
 they do not establish real-server acceptance of this implementation.
 
+## Java 1.21.1 wool and bed dye alternatives
+
+The locked minecraft-data 3.117.0 / prismarine-recipe 1.5.0 combination keeps
+only the first source-color alternative in each wool/bed dye recipe. For
+example, cyan dye resolves only with black wool or black bed. Vanilla Java
+1.21.1 instead enumerates all **15 other colors**, excluding the output color.
+The complete wool/beds tags must not be substituted because they include that
+illegal same-color input.
+
+A first-party adapter verifies an existing resolved shapeless recipe from
+`recipesAll`: two one-item inputs, one output, no remainder or table, exact
+registered IDs and a -1/-1/+1 delta. It constructs only the missing alternatives
+through the same installed `Recipe` constructor, without changing templates or
+the global registry. The adapter is limited to exact version 1.21.1 and the
+32 wool/bed outputs. `list-recipes`, `get-recipe`, `can-craft` and `craft-item`
+share these concrete alternatives; unrelated and normal shaped bed recipes
+remain unchanged. There is no general raw-recipe execution fallback.
+
+Execution continues through `craftVerified`, never optimistic `bot.craft`.
+Authoritative ingredient/cursor/grid/output confirmation, space checks,
+serialization, cancellation, uncertainty fences and no automatic retry remain
+in force. Each batch step reselects from current inventory; an output cannot
+become a same-color input in the next step. Tool schemas, IPC, package versions
+and dependency locks are unchanged. Datapacks or plugins overriding vanilla
+recipes and other Minecraft versions are outside this compatibility repair.
+
+Recipe rules were checked as static JSON inside the official
+[Mojang 1.21.1 server distribution](https://piston-data.mojang.com/v1/objects/59353fb40c36d304f2035d51e7d6e6baa98dc05c/server.jar)
+(SHA1 `59353fb40c36d304f2035d51e7d6e6baa98dc05c`), at
+`data/minecraft/recipe/dye_<color>_{wool,bed}.json`. The archive was not executed.
+`tests/tagged-dye-recipes.test.ts` covers all 480 legal input/output pairs,
+32 same-color refusals, read/execution agreement, split stacks, malformed
+resolved templates and the existing authoritative safety barriers using only
+neutral synthetic packets. These tests do not establish real-server acceptance.
+
 ## Change policy
 
 Schema or semantic changes require a documented compatibility decision, regression fixture and maintainer review. Breaking tool/IPC contracts require a version boundary and migration notes. Do not infer compatibility solely from matching tool names or package version. The public candidate is 3.1.1-rc.2 so it cannot be confused with the historical base.
