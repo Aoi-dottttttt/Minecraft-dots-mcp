@@ -324,7 +324,8 @@ function collectCandidateRecipesFromBot(
   const partial: CandidateRecipe[] = [];
 
   const dyeAlternatives = resolvedDyeAlternatives(bot, mcData, query);
-  const inventory = bot.inventory.items().map(item => ({ name: item.name, count: item.count }));
+  const inventory = dyeAlternatives.length > 0
+    ? bot.inventory.items().map(item => ({ name: item.name, count: item.count })) : [];
   const pushRecipesFor = (name: string, id: number, exactMatch: boolean) => {
     const recipesFor = (bot as unknown as { recipesFor?: (...args: unknown[]) => unknown[] }).recipesFor;
     if (typeof recipesFor !== 'function') return;
