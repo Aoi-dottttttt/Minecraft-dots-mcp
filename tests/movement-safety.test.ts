@@ -8,6 +8,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { BotConnection } from '../src/bot-connection.js';
 import { ToolFactory } from '../src/tool-factory.js';
 import { registerCompleteControls } from '../src/complete-controls.js';
+import { registerPositionTools } from '../src/tools/position-tools.js';
 import { inventoryFixture } from './helpers/inventory-fixture.js';
 import { constrainMovements, inspectMovementSafety, surfaceFromWater, waitForDryMovement } from '../src/movement-safety.js';
 import { moveAndVerify } from '../src/tools/movement-utils.js';
@@ -148,6 +149,18 @@ test('navigation abort before goto starts never issues a delayed goal', async t 
   const assertion = t.throwsAsync(action);
   controller.abort(); await assertion;
   t.is(starts, 0); t.is(f.bot.listenerCount('physicsTick'), 0);
+});
+
+test('legacy move-to-position propagates its action cancellation before a deferred path starts', async t => {
+  const f = fixture(); f.dry(); const controller = new AbortController();
+  let starts = 0; f.bot.pathfinder.goto = async () => { starts++; };
+  const server = { tool: sinon.stub() } as unknown as McpServer;
+  const factory = new ToolFactory(server, { checkConnectionAndReconnect: async () => ({ connected: true }) } as unknown as BotConnection);
+  registerPositionTools(factory, () => f.bot, () => ({ signal: controller.signal }));
+  controller.abort();
+  const handler = (server.tool as sinon.SinonStub).getCalls().find(call => call.args[0] === 'move-to-position')!.args[3];
+  const result = await handler({ x: 2, y: 64, z: 0 });
+  t.true(result.isError); t.is(starts, 0);
 });
 
 test.serial('MCP native goto keeps the shared lane occupied through stop until its real path settles', async t => {
