@@ -146,3 +146,15 @@ test.serial('world file: write failure is observable and pauses sampling rather 
   await chmod(exporter.path, 0o600); await exporter.close();
   t.is(JSON.parse(await readFile(exporter.path, 'utf8')).reason, 'closed');
 });
+
+test.serial('world file: late-install spawn getter is evaluated after path setup, not from stale captured readiness', async t => {
+  const parent = await mkdtemp(join(tmpdir(), 'world-file-test-')); t.teardown(() => rm(parent, { recursive: true, force: true }));
+  const f = fixture(); let spawnSeen = true, checks = 0;
+  const pending = createWorldFileExporter(f.bot, { directory: join(parent, 'out'), initiallyReady: () => { checks++; return spawnSeen; } });
+  spawnSeen = false; // A respawn happened while asynchronous directory setup yielded.
+  const exporter = await pending; t.teardown(() => exporter.close());
+  t.is(checks, 1); t.is(f.reads(), 0);
+  const value = JSON.parse(await readFile(exporter.path, 'utf8')); t.is(value.status, 'stale'); t.is(value.volume, null);
+  f.bot.emit('spawn'); await exporter.flush();
+  t.is(JSON.parse(await readFile(exporter.path, 'utf8')).status, 'live');
+});

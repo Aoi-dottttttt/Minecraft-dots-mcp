@@ -121,14 +121,15 @@ export interface WorldFileExporter {
 }
 
 /**
- * Isolated, opt-in prototype: no runtime registration, socket, renderer, control
+ * Opt-in exporter: never activates itself or creates a socket, renderer, control
  * file, second bot, reconnect, game action or dependency installation.
  * A consumer MUST discard live frames after validUntil, including producer crash.
  */
-export async function createWorldFileExporter(bot: Bot, options: { directory: string; initiallyReady?: boolean }): Promise<WorldFileExporter> {
+export async function createWorldFileExporter(bot: Bot, options: { directory: string; initiallyReady?: boolean | (() => boolean) }): Promise<WorldFileExporter> {
   if (bot.version !== '1.21.1') throw Error('World-file prototype supports only Minecraft Java 1.21.1');
   const writer = await createPrivateWorldWriter(options.directory);
-  let generation = 0, sequence = 0, ready = options.initiallyReady === true, closed = false, ended = false;
+  // Evaluate late-install spawn evidence only AFTER asynchronous path setup.
+  let generation = 0, sequence = 0, ready = typeof options.initiallyReady === 'function' ? options.initiallyReady() : options.initiallyReady === true, closed = false, ended = false;
   let busy = false, lastCapture = -Infinity, error: 'world-file-write-failed' | null = null;
   let lastWrite: Promise<boolean> = Promise.resolve(false);
   type Pending = { frame: WorldFileFrame; resolve(value: boolean): void; reject(error: unknown): void };

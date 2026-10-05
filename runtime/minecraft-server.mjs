@@ -2,6 +2,8 @@
 // Modified for 2.1.0-dot.2 release (2026-10-03). See RELEASE.md.
 // Persistent gameplay server: upstream Yuniko MCP tools, one configured identity, no relay credentials.
 import { startReadonlyObserver, validateObserverPort } from '../dist/readonly-observer.js';
+import { createWorldFileExporter } from '../dist/world-file-export.js';
+import { join } from 'node:path';
 import { EventEmitter } from 'node:events';
 import { randomUUID } from 'node:crypto';
 import { parseArgs } from 'node:util';
@@ -36,10 +38,19 @@ const port=Number(process.argv[3]);
 if(!fixture&&(process.argv[2]!=='--user-started-session'||!Number.isInteger(port)||port<1024||port>65535))throw Error('Explicit user-started mode and bridge port required');
 const backendVersion='3.2.0-rc.2';
 const backendStartedAt=new Date().toISOString();
-const {values:backendOptions}=parseArgs({args:process.argv.slice(fixture?3:4),options:{'session-id':{type:'string'},'state-dir':{type:'string'},'username':{type:'string',default:'MCPBot'},'observe-port':{type:'string'}},strict:true});
+const {values:backendOptions}=parseArgs({args:process.argv.slice(fixture?3:4),options:{'session-id':{type:'string'},'state-dir':{type:'string'},'username':{type:'string',default:'MCPBot'},'observe-port':{type:'string'},'observe-world-files':{type:'boolean',default:false}},strict:true});
 const username=backendOptions.username;
 const observerPort=validateObserverPort(backendOptions['observe-port']);
-let observer=null,observerError=null;
+let observer=null,observerError=null,worldObserver=null,worldObserverError=null;
+let spawnSeen=false;
+function closeWorldObserver(){
+ spawnSeen=false;
+ if(worldObserver)void worldObserver.close().catch(()=>{worldObserverError='world_observer_close_failed';});
+}
+function worldObserverStatus(){
+ const failure=worldObserverError??worldObserver?.getError();
+ return worldObserver?{readonly:true,path:worldObserver.path,...(failure?{error:failure}:{})}:worldObserverError?{readonly:true,path:null,error:worldObserverError}:null;
+}
 if(!/^[A-Za-z0-9_]{1,16}$/.test(username))throw Error('Username must be 1..16 letters, digits or underscores');
 const stateRoot=validateStateDir(backendOptions['state-dir'],{create:true});
 const backendSessionId=backendOptions['session-id']??randomUUID();
@@ -75,10 +86,16 @@ if(fixture){
  const write=bot._client.write.bind(bot._client);bot._client.write=(name,packet)=>{if(['position','position_look','look','flying'].includes(name))movementPackets++;return write(name,packet);};
 }
 const oxygenAuthority=installOxygenAuthority(bot);
+// Install before any awaited initialization; only an actual spawn event is
+// evidence for late observer setup. Lifecycle resets invalidate that evidence.
+bot.on('spawn',()=>{spawnSeen=true;});
+for(const name of ['respawn','death'])bot.on(name,()=>{spawnSeen=false;});
+for(const name of ['end','kicked'])bot.on(name,closeWorldObserver);
+if(fixture)bot.emit('spawn'); // synthetic lifecycle evidence, never a game login
 const ownBlocks=installPlacementProvenance(bot);
 const interactionTrace=installInteractionTrace(bot);
 const pos=p=>p?{x:p.x,y:p.y,z:p.z}:null;
-function status(){const p=bot.entity?.position;return {at:new Date().toISOString(),backendSessionId,backendPid:process.pid,backendVersion,backendStartedAt,observer:observer?{url:observer.url,readonly:true}:observerError?{url:null,readonly:true,error:observerError}:null,controlFence:stopFailed?'stop_cleanup_failed':stopDepth?'stop_in_progress':null,username,mode:fixture?'offline-fixture':'live',ready,ended,dead,endReason,version:bot.version,playerUuid:bot.player?.uuid,position:pos(p),yaw:bot.entity?.yaw,pitch:bot.entity?.pitch,onGround:bot.entity?.onGround,health:bot.health,food:bot.food,oxygen:oxygenAuthority.snapshot().oxygen,oxygenEvidence:oxygenAuthority.snapshot(),gameMode:bot.game?.gameMode,dimension:bot.game?.dimension,time:bot.time?.timeOfDay,isRaining:bot.isRaining,heldItem:bot.heldItem?.name,inventory:authority.frames.get(0)?.fullRevision?authority.frames.get(0).slots.flatMap((i,slot)=>i&&slot>=9&&slot<45?[{name:i.name,type:i.type,count:i.count,slot,durabilityUsed:i.durabilityUsed,maxDurability:i.maxDurability}]:[]):null,inventoryAuthority:{ready:Boolean(authority.frames.get(0)?.fullRevision&&authority.cursorKnown&&!authority.ended),mutationReady:Boolean(authority.frames.get(0)?.fullRevision&&authority.cursorKnown&&!authority.ended&&!authority.fence),sequence:authority.sequence,fence:authority.fence,cursor:authority.cursor?{name:authority.cursor.name,count:authority.cursor.count}:null,equipment:authority.frames.get(0)?.slots.flatMap((i,slot)=>i&&[5,6,7,8,45].includes(slot)?[{slot,name:i.name,type:i.type,count:i.count,durabilityUsed:i.durabilityUsed,maxDurability:i.maxDurability}]:[])??[]},support:p?bot.blockAt(p.offset(0,-0.05,0))?.name:null,packets,physicsTicks,movementPackets,chatSent,interactionTrace:interactionTrace.snapshot(),players:Object.keys(bot.players??{}),events:events.slice(-12)};}
+function status(){const p=bot.entity?.position;return {at:new Date().toISOString(),backendSessionId,backendPid:process.pid,backendVersion,backendStartedAt,worldObserver:worldObserverStatus(),observer:observer?{url:observer.url,readonly:true}:observerError?{url:null,readonly:true,error:observerError}:null,controlFence:stopFailed?'stop_cleanup_failed':stopDepth?'stop_in_progress':null,username,mode:fixture?'offline-fixture':'live',ready,ended,dead,endReason,version:bot.version,playerUuid:bot.player?.uuid,position:pos(p),yaw:bot.entity?.yaw,pitch:bot.entity?.pitch,onGround:bot.entity?.onGround,health:bot.health,food:bot.food,oxygen:oxygenAuthority.snapshot().oxygen,oxygenEvidence:oxygenAuthority.snapshot(),gameMode:bot.game?.gameMode,dimension:bot.game?.dimension,time:bot.time?.timeOfDay,isRaining:bot.isRaining,heldItem:bot.heldItem?.name,inventory:authority.frames.get(0)?.fullRevision?authority.frames.get(0).slots.flatMap((i,slot)=>i&&slot>=9&&slot<45?[{name:i.name,type:i.type,count:i.count,slot,durabilityUsed:i.durabilityUsed,maxDurability:i.maxDurability}]:[]):null,inventoryAuthority:{ready:Boolean(authority.frames.get(0)?.fullRevision&&authority.cursorKnown&&!authority.ended),mutationReady:Boolean(authority.frames.get(0)?.fullRevision&&authority.cursorKnown&&!authority.ended&&!authority.fence),sequence:authority.sequence,fence:authority.fence,cursor:authority.cursor?{name:authority.cursor.name,count:authority.cursor.count}:null,equipment:authority.frames.get(0)?.slots.flatMap((i,slot)=>i&&[5,6,7,8,45].includes(slot)?[{slot,name:i.name,type:i.type,count:i.count,durabilityUsed:i.durabilityUsed,maxDurability:i.maxDurability}]:[])??[]},support:p?bot.blockAt(p.offset(0,-0.05,0))?.name:null,packets,physicsTicks,movementPackets,chatSent,interactionTrace:interactionTrace.snapshot(),players:Object.keys(bot.players??{}),events:events.slice(-12)};}
 const server=new McpServer({name:'minecraft-mcp-server-minecraft',version:backendVersion});
 const readTools=new Set(['get-position','list-inventory','find-item','find-blocks','get-block-info','find-entity','detect-gamemode','read-chat','list-recipes','get-recipe','can-craft','inspect-nearby']);
 const factory=new ToolFactory(server,{checkConnectionAndReconnect:async()=>({connected:ready&&!ended&&!dead,message:'MCPBot is not ready; reconnection is disabled.'}),assertActionAllowed(name){if(!readTools.has(name)){if(stopDepth||stopFailed)throw Error('Safety stop is draining or failed; new mutations are fenced');
@@ -154,6 +171,7 @@ server.tool('respawn-player','Respawn MCPBot after death in the existing game se
 function quitGame(){
  ended=true;ready=false;endReason='user_requested_disconnect';
  void observer?.close();
+ closeWorldObserver();
  // Emergency quit must not wait for a stuck inventory/plugin cancellation.
  void Promise.resolve().then(()=>complete?.stop()).catch(()=>{});
  try{bot.clearControlStates();}finally{bot.quit();}
@@ -168,5 +186,11 @@ if(ended)throw Error('Minecraft session ended during control initialization');
 if(observerPort!==null){
  try{observer=await startReadonlyObserver(bot,authority,{port:observerPort});}
  catch{observerError='observer_start_failed';event('observer_unavailable');}
+}
+if(backendOptions['observe-world-files']){
+ try{
+  worldObserver=await createWorldFileExporter(bot,{directory:join(stateRoot,'native-observer'),initiallyReady:()=>spawnSeen&&!ended&&!dead});
+  if(ended)closeWorldObserver();
+ }catch{worldObserverError='world_observer_start_failed';event('world_observer_unavailable');}
 }
 await server.connect(new StdioServerTransport());
