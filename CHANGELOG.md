@@ -2,6 +2,12 @@
 
 ## 3.1.1-rc.2: verified maintenance candidate
 
+- Order native placement after the clicked-face rotation's physics tick; recheck
+  session, inventory, reference/target, reach and stable player pose before the
+  single public placement call; retain raw confirmation/provenance and no retry
+- Add locked Mineflayer 4.39.0 packet-order regressions for all six clicked faces,
+  stalled-tick timeout, cancellation, stale state and confirmation boundaries
+
 - Verify detach cancellation across both IPC rejection and settled backend inventory-fence rejection, with no-motion and no-extra-click assertions
 - Allow verified movement through consistently open wooden doors using a scoped
   first-party pathfinding adapter, retaining real collision shapes and straight
