@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Modified for the public-candidate release; see RELEASE.md.
-# Modified for 3.1.1-rc.1 release (2026-10-04). See RELEASE.md.
+# Modified for 3.1.1-rc.2 release (2026-10-04). See RELEASE.md.
 """Explicit Start, persistent game daemon, and replaceable controller frontend.
 
 Opening a window reads only non-secret ownership/status reports. The bridge is
@@ -26,7 +26,7 @@ import uuid
 sys.dont_write_bytecode = True
 from process_gate import ProcessGate
 
-VERSION = '3.1.1-rc.1'
+VERSION = '3.1.1-rc.2'
 BASE = pathlib.Path(__file__).resolve().parent
 SESSION_NAME = re.compile(r'^session-\d{8}T\d{6}Z-[a-f0-9]{12}$')
 
@@ -75,7 +75,8 @@ def clean_env(proxy=False):
     allowed = {'HOME', 'USER', 'LOGNAME', 'PATH', 'LANG', 'LC_ALL', 'TZ'}
     if proxy:
         allowed |= {'HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY', 'NO_PROXY',
-                    'http_proxy', 'https_proxy', 'all_proxy', 'no_proxy'}
+                    'http_proxy', 'https_proxy', 'all_proxy', 'no_proxy',
+                    'NODE_EXTRA_CA_CERTS'}
     return {key: value for key, value in os.environ.items() if key in allowed}
 
 

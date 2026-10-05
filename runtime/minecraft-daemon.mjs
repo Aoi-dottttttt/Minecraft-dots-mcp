@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { IPC_VERSION, MAX_FRAME_BYTES, SOCKET_NAME, encodeFrame, stableJson, validateStateDir } from './minecraft-ipc.mjs';
 
-const DAEMON_VERSION = '3.1.1-rc.1';
+const DAEMON_VERSION = '3.1.1-rc.2';
 const CALL_TIMEOUT_MS = 180000;
 const MAX_LEDGER_BYTES = 16 * MAX_FRAME_BYTES;
 const MAX_PEER_REQUESTS = 8, MAX_GLOBAL_REQUESTS = 32;

@@ -30,7 +30,7 @@ export function registerInteractionTools(factory: ToolFactory, getBot: () => Bot
       options.signal?.throwIfAborted();
       const bot = getBot();
       const selected = getInventoryAuthority(bot).getFrame(0).slots[args.inventorySlot];
-      await equipVerified(bot, args.inventorySlot, args.destination, args.timeoutMs, { exactSource: true });
+      await equipVerified(bot, args.inventorySlot, args.destination, args.timeoutMs, { exactSource: true, signal: options.signal });
       options.signal?.throwIfAborted();
       return response({ requestIssued: true, confirmed: args.destination !== 'hand', itemName: selected?.name, sourceSlot: args.inventorySlot, destination: args.destination,
         evidence: ['server-confirmed inventory contents'], detail: args.destination === 'hand' ? 'Exact stack inventory verified; hotbar selection is locally selected and sent without a protocol acknowledgement' : 'Exact equipment transfer confirmed by the server' });

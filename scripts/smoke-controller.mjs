@@ -15,9 +15,9 @@ const children = [];
 const env = { PATH: process.env.PATH || '', HOME: sandbox };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const json = path => JSON.parse(readFileSync(path, 'utf8'));
-async function until(test, label) {
+async function until(test, label, details) {
   for (let n = 0; n < 400; n++) { if (test()) return; await sleep(25); }
-  throw Error('Timed out: ' + label);
+  throw Error('Timed out: ' + label + (details ? ': ' + details() : ''));
 }
 function launch(args, ownerPipe = false) {
   const child = spawn(process.execPath, args, { cwd: root, env, stdio: [ownerPipe ? 'pipe' : 'ignore', 'ignore', 'pipe'] });
@@ -38,12 +38,15 @@ async function lostActionResponse(daemon) {
   const manifest = json(join(daemonDir, 'session.json'));
   const socketPath = join(proxyDir, 'control.sock');
   const sockets = new Set();
+  const operations = {};
+  const proxyErrors = [];
   let calls = 0, connections = 0;
   const proxy = net.createServer(downstream => {
     connections++;
     const upstream = net.createConnection(manifest.socketPath);
     sockets.add(downstream); sockets.add(upstream);
-    downstream.on('error', () => {}); upstream.on('error', () => {});
+    downstream.on('error', error => proxyErrors.push({ peer: 'frontend', code: error.code }));
+    upstream.on('error', error => proxyErrors.push({ peer: 'daemon', code: error.code }));
     downstream.on('close', () => upstream.destroy());
     upstream.on('close', () => downstream.destroy());
     let requests = '', responses = '', lostId;
@@ -53,6 +56,7 @@ async function lostActionResponse(daemon) {
         const end = requests.indexOf('\n'); if (end < 0) break;
         const line = requests.slice(0, end); requests = requests.slice(end + 1);
         const request = JSON.parse(line);
+        operations[request.op] = (operations[request.op] ?? 0) + 1;
         if (request.op === 'call') { calls++; lostId = request.id; }
         upstream.write(line + '\n');
       }
@@ -72,7 +76,24 @@ async function lostActionResponse(daemon) {
     writeFileSync(join(proxyDir, 'session.json'), JSON.stringify({ ...manifest, socketPath }), { mode: 0o600 });
     const dir = join(sandbox, 'uncertain-controller');
     const controller = launch(['runtime/minecraft-client.mjs', '--attach', proxyDir, '--state-dir', dir]);
-    await until(() => existsSync(join(dir, 'status.json')), 'response-loss controller ready');
+    // Only report known fixture states and IPC counts, never raw child stderr,
+    // manifest paths or arbitrary error text from a failed startup.
+    const readinessDetails = () => {
+      const message = existsSync(join(dir, 'error.json')) ? json(join(dir, 'error.json')).message : '';
+      const knownErrors = ['Session status unavailable', 'Invalid status response',
+        'MCP error -32000: Connection closed', 'MCP error -32001: Request timed out'];
+      return JSON.stringify({ controllerExited: done(controller), exitCode: controller.exitCode,
+        error: knownErrors.includes(message) ? message : message ? 'Other startup error' : null,
+        toolsListed: existsSync(join(dir, 'tools.json')),
+        controllerStatusSaved: existsSync(join(dir, 'controller-status.json')),
+        sessionStatusSaved: existsSync(join(dir, 'status.json')),
+        connections, calls, operations, proxyErrors });
+    };
+    await until(() => {
+      if (done(controller)) throw Error('Response-loss controller exited before readiness: ' + readinessDetails());
+      return existsSync(join(dir, 'status.json'));
+    }, 'response-loss controller ready', readinessDetails);
+    assert.equal(calls, 0, 'Controller readiness uses status IPC without dispatching an action');
     const createdAt = Date.now();
     const ids = ['1', '2'].map(value => String(createdAt) + '-' + value.repeat(16) + '.json');
     for (const id of ids) writeFileSync(join(dir, 'commands', id), JSON.stringify({
@@ -116,7 +137,7 @@ try {
   const first = launch(['runtime/minecraft-client.mjs', '--attach', daemonDir, '--state-dir', firstDir]);
   await until(() => existsSync(join(firstDir, 'controller-status.json')), 'first controller attached');
   const initial = json(join(firstDir, 'controller-status.json'));
-  assert.equal(initial.frontendVersion, '3.1.1-rc.1');
+  assert.equal(initial.frontendVersion, '3.1.1-rc.2');
   const backendPid = initial.daemon.backend.pid;
   assert.notEqual(call(launcherRoot, 'get-position').isError, true);
   assert.notEqual(call(launcherRoot, 'stop-movement').isError, true);
@@ -143,7 +164,7 @@ try {
   const next = json(join(secondDir, 'controller-status.json'));
   assert.equal(next.daemon.backend.pid, backendPid);
   assert.equal(next.daemon.sessionId, initial.daemon.sessionId);
-  assert.equal(next.daemon.backend.server.version, '3.1.1-rc.1');
+  assert.equal(next.daemon.backend.server.version, '3.1.1-rc.2');
   assert.notEqual(call(launcherRoot, 'get-position').isError, true);
   second.kill('SIGTERM'); await until(() => done(second), 'controller signal detach');
   assert.equal(done(daemon), false);

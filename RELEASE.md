@@ -1,6 +1,17 @@
-# Public candidate: 3.1.1-rc.1
+# Public candidate: 3.1.1-rc.2
 
-This history-free public source candidate preserves the functional foundation of version 3.1.0-dot.2 and adds publication hardening. It is not a claim of complete real-server acceptance.
+This maintenance candidate builds on the public 3.1.1-rc.1 source and the merged frontend transport-uncertainty contribution (PR #1). It is not a claim of complete real-server acceptance.
+
+## Maintenance changes
+
+- Exact birch-plank fuel conservation in an ordinary furnace, preserving all confirmation barriers
+- Session-local self-placement provenance shared by native placement and verified generic block use
+- Cancellation propagation through equipment/crafting and book-edit preparation
+- Bounded authoritative book-page observation with stable pagination and untrusted text labels
+- No-food preflight, fenced plain chat and existing bridge certificate-environment preservation
+- More informative response-loss controller fixture diagnostics and an explicit capability/evidence matrix
+
+These changes require an explicitly started new backend. Existing state, controller queues and placement ownership are never imported automatically. Open PR #2 remains separate from this candidate.
 
 ## Functional foundation
 

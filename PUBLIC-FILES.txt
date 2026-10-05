@@ -22,6 +22,7 @@ RESTORE.md
 SECURITY.md
 SHA256SUMS
 VALIDATION.json
+docs/CAPABILITY-MATRIX.md
 docs/COMPATIBILITY.md
 docs/UPGRADING.md
 eslint.config.mjs
@@ -37,6 +38,7 @@ runtime/minecraft-ipc.mjs
 runtime/minecraft-server.mjs
 runtime/open.sh
 runtime/process_gate.py
+scripts/check-capability-matrix.mjs
 scripts/publication-manifest.py
 scripts/smoke-controller.mjs
 scripts/smoke-daemon.mjs
@@ -45,7 +47,9 @@ scripts/smoke-protocol.mjs
 scripts/smoke-public-hardening.mjs
 scripts/smoke-runtime.mjs
 scripts/smoke-stdio.mjs
+scripts/test-fenced-plain-chat.mjs
 scripts/test-launch-lifecycle.py
+src/book-observation.ts
 src/bot-connection.ts
 src/bot-startup.ts
 src/complete-controls.ts
@@ -55,6 +59,7 @@ src/inventory-authority.ts
 src/logger.ts
 src/main.ts
 src/message-store.ts
+src/placement-provenance.ts
 src/stdio-filter.ts
 src/survival-interactions.ts
 src/tool-factory.ts
@@ -82,6 +87,7 @@ src/verified-workstation-actions.ts
 tests/action-safety.test.ts
 tests/block-confirmation.test.ts
 tests/block-tools.test.ts
+tests/book-observation.test.ts
 tests/bot-connection.test.ts
 tests/chat-tools.test.ts
 tests/config.test.ts
@@ -104,6 +110,7 @@ tests/message-store.test.ts
 tests/native-ore-policy.test.ts
 tests/native-plugin-startup.test.ts
 tests/position-tools.test.ts
+tests/review-capability-gaps.test.ts
 tests/reviewer-complete-controls.test.ts
 tests/reviewer-crafting.test.ts
 tests/reviewer-recipes.test.ts

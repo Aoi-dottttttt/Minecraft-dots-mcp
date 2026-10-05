@@ -31,7 +31,7 @@ try {
   const names = tools.tools.map(tool => tool.name);
   for (const name of expected) assert.ok(names.includes(name), `Missing legacy tool ${name}`);
   assert.equal(new Set(names).size, names.length, 'Duplicate MCP names');
-  for (const name of ['activate_block','open_container','container_deposit','sleep','fish','trade_with_villager','enchant_item','anvil_combine','mount_entity','activate_item','inspect-block-properties','open-workstation','select-window-option','equip-inventory-slot']) assert.ok(names.includes(name), `Missing gameplay tool ${name}`);
+  for (const name of ['activate_block','open_container','container_deposit','sleep','fish','trade_with_villager','enchant_item','anvil_combine','mount_entity','activate_item','inspect-block-properties','open-workstation','select-window-option','equip-inventory-slot','read-book']) assert.ok(names.includes(name), `Missing gameplay tool ${name}`);
   for (const name of ['send_packet','run_command','connect_bot','reconnect_bot','creative_fly','set_physics_enabled']) assert.ok(!names.includes(name), `Forbidden tool ${name}`);
   assert.ok(names.length > 100);
   console.log(`Integrated tool count: ${names.length}`);

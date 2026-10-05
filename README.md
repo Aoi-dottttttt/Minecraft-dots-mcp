@@ -2,7 +2,7 @@
 
 A shared maintenance project: fix a bug once, keep a neutral regression, and share reviewed improvements across installations. Each installation keeps its own configuration, credentials and game state local. Contributions use [forks and pull requests](CONTRIBUTING.md); installation and gameplay still need the respective user’s authorization.
 
-Public source candidate **3.1.1-rc.1**, based on 3.1.0-dot.2 for Minecraft Java **1.21.1 / protocol 767**. It combines server-authoritative inventory/crafting checks with a persistent game backend and a restartable MCP controller. [中文快速开始](README.zh-CN.md)
+Public source candidate **3.1.1-rc.2**, based on 3.1.0-dot.2 for Minecraft Java **1.21.1 / protocol 767**. It combines server-authoritative inventory/crafting checks with a persistent game backend and a restartable MCP controller. [中文快速开始](README.zh-CN.md)
 
 This is experimental software. A registered tool is not proof that its complete behavior works on a real server. In particular, **boat placement/riding is not live-validated and is not advertised as working**. Back up valuable worlds, use an authorized test environment first, and review [scope and limits](INTEGRATION.md) and [security](SECURITY.md). The dependency audit still requires reviewing documented development-only glob and optional authentication-chain advisories; this candidate is not a blanket security certification.
 

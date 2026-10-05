@@ -337,7 +337,7 @@ function getAllRecipes(mcData: unknown): unknown[] {
   return [];
 }
 
-export function registerCraftingTools(factory: ToolFactory, getBot: () => mineflayer.Bot): void {
+export function registerCraftingTools(factory: ToolFactory, getBot: () => mineflayer.Bot, getOptions: () => { signal?: AbortSignal } = () => ({})): void {
   factory.registerTool(
     "list-recipes",
     "List all available crafting recipes the bot can make with current inventory",
@@ -419,11 +419,14 @@ export function registerCraftingTools(factory: ToolFactory, getBot: () => minefl
 
       const authority = getInventoryAuthority(bot);
       authority.assertMutationReady();
+      const options = getOptions();
+      options.signal?.throwIfAborted();
       const batchAdmissionDeadline = Date.now() + 60000;
       let craftedCount = 0;
       let itemCount = 0;
       let resolvedName = outputQuery;
       for (let attempt = 0; attempt < amount; attempt++) {
+        options.signal?.throwIfAborted();
         if (attempt > 0 && Date.now() >= batchAdmissionDeadline) return factory.createErrorResponse(`Craft batch time budget reached. Confirmed ${craftedCount}/${amount} craft(s), ${itemCount} ${resolvedName}. No further recipe started; inspect inventory before requesting more.`);
         const table = findNearbyCraftingTable(bot, mcData);
         const noTable = collectCandidateRecipesFromBot(bot, mcData, outputQuery, itemsById, null);
@@ -434,7 +437,7 @@ export function registerCraftingTools(factory: ToolFactory, getBot: () => minefl
         const candidate = candidates[0];
         resolvedName = candidate.resultName;
         try {
-          const result = await craftVerified(bot, candidate.recipe as VerifiedRecipe, candidate.craftingTable as Parameters<typeof bot.craft>[2]);
+          const result = await craftVerified(bot, candidate.recipe as VerifiedRecipe, candidate.craftingTable as Parameters<typeof bot.craft>[2], undefined, options);
           craftedCount++;
           itemCount += result.outputCount;
         } catch (error) {

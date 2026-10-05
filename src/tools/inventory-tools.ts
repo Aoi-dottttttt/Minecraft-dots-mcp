@@ -11,7 +11,7 @@ interface InventoryItem {
   slot: number;
 }
 
-export function registerInventoryTools(factory: ToolFactory, getBot: () => mineflayer.Bot): void {
+export function registerInventoryTools(factory: ToolFactory, getBot: () => mineflayer.Bot, getOptions: () => { signal?: AbortSignal } = () => ({})): void {
   factory.registerTool(
     "list-inventory",
     "List all items in the bot's inventory",
@@ -73,7 +73,7 @@ export function registerInventoryTools(factory: ToolFactory, getBot: () => minef
         return factory.createErrorResponse(`Couldn't find any item matching '${itemName}' in authoritative inventory`);
       }
 
-      await equipVerified(bot, item.slot, destination as mineflayer.EquipmentDestination);
+      await equipVerified(bot, item.slot, destination as mineflayer.EquipmentDestination, undefined, getOptions());
       return factory.createResponse(destination === 'hand' ? `Selected ${item.name} in hand; inventory slot server-confirmed, hotbar selection sent` : `Server-confirmed ${item.name} equipped to ${destination}`);
     }
   );

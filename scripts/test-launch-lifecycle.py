@@ -46,6 +46,29 @@ class ImmediateThread:
 
 
 class LifecycleTests(unittest.TestCase):
+    def test_bridge_environment_preserves_existing_platform_ca_and_safety_filters(self):
+        inherited = {
+            'PATH': '/usr/bin', 'HOME': '/tmp/offline-launcher-home',
+            'HTTPS_PROXY': 'http://proxy.example.invalid:8080',
+            'NODE_EXTRA_CA_CERTS': '/tmp/existing-platform-ca-fixture.pem',
+            'NODE_PATH': '/tmp/untrusted-modules', 'NODE_OPTIONS': '--inspect',
+            'NODE_DEBUG': 'tls', 'NODE_TLS_REJECT_UNAUTHORIZED': '0',
+            'SSL_CERT_FILE': '/tmp/not-required-by-node.pem',
+        }
+        with mock.patch.dict(os.environ, inherited, clear=True):
+            bridge = launcher.clean_env(proxy=True)
+            backend = launcher.clean_env(proxy=False)
+        self.assertEqual(bridge['NODE_EXTRA_CA_CERTS'], inherited['NODE_EXTRA_CA_CERTS'])
+        self.assertEqual(bridge['HTTPS_PROXY'], inherited['HTTPS_PROXY'])
+        for key in ['NODE_PATH', 'NODE_OPTIONS', 'NODE_DEBUG', 'NODE_TLS_REJECT_UNAUTHORIZED', 'SSL_CERT_FILE']:
+            self.assertNotIn(key, bridge)
+        self.assertNotIn('NODE_EXTRA_CA_CERTS', backend)
+        self.assertNotIn('HTTPS_PROXY', backend)
+
+    def test_bridge_environment_does_not_invent_certificate_configuration(self):
+        with mock.patch.dict(os.environ, {'PATH': '/usr/bin'}, clear=True):
+            self.assertNotIn('NODE_EXTRA_CA_CERTS', launcher.clean_env(proxy=True))
+
     def harness(self, path):
         app = launcher.Launcher.__new__(launcher.Launcher)
         app.gate = ProcessGate()

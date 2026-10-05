@@ -41,7 +41,7 @@ const transport = new StdioClientTransport({ command: process.execPath,
   args: fixture ? [join(runtimeDir, 'minecraft-server.mjs'), '--offline-fixture', '--state-dir', join(stateDir, 'gameplay-state')] : [join(runtimeDir, 'minecraft-frontend.mjs'), '--attach', resolve(daemonDir)],
   cwd: runtimeDir, env, stderr: 'pipe' });
 transport.stderr?.on('data', () => {});
-const client = new Client({ name: 'minecraft-private-session-client', version: '3.1.1-rc.1' });
+const client = new Client({ name: 'minecraft-private-session-client', version: '3.1.1-rc.2' });
 let running = true, closing = false;
 async function shutdown() {
   if (closing) return;
@@ -76,7 +76,7 @@ try {
   const toolNames = new Set(listed.tools.map(tool => tool.name));
   save('tools.json', { server: client.getServerVersion(), tools: listed.tools });
   save('session.json', { sessionId, state: 'mcp_connected', at: new Date().toISOString(), pid: process.pid,
-    server: client.getServerVersion(), frontendVersion: '3.1.1-rc.1', daemonDir, toolCount: listed.tools.length, automaticReconnect: false, controllerOnly: !fixture });
+    server: client.getServerVersion(), frontendVersion: '3.1.1-rc.2', daemonDir, toolCount: listed.tools.length, automaticReconnect: false, controllerOnly: !fixture });
   if (!fixture) save('controller-status.json', parseStatus(await call('get-controller-status')));
   if (fixture) {
     const status = await call('get-session-status');
