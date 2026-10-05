@@ -132,14 +132,21 @@ function placementBot() {
     _client: new EventEmitter(),
     registry: minecraftData('1.21.1'),
     version: '1.21.1',
-    entity: { position: new Vec3(0, 64, 0) },
+    entity: { position: new Vec3(0, 64, 0), eyeHeight: 1.62, yaw: 0, pitch: 0 },
     heldItem: { name: 'stone', type: 1 },
     blockAt: sinon.stub().callsFake((p: Vec3) => p.equals(target)
       ? { name: targetType ? 'stone' : 'air', type: targetType, position: p }
       : { name: 'stone', type: 1, position: p }),
     canSeeBlock: sinon.stub().returns(true),
     lookAt: sinon.stub().resolves(),
+    waitForTicks: sinon.stub().resolves(),
+    look: sinon.stub().resolves(),
     placeBlock: sinon.stub().resolves()
+  });
+  bot.lookAt.callsFake(async (point: Vec3) => {
+    const delta = point.minus(bot.entity.position.offset(0, bot.entity.eyeHeight, 0));
+    bot.entity.yaw = Math.atan2(-delta.x, -delta.z);
+    bot.entity.pitch = Math.atan2(delta.y, Math.hypot(delta.x, delta.z));
   });
   return { bot, setTarget: (type: number) => { targetType = type; } };
 }
