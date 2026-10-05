@@ -14,7 +14,7 @@ The checker keeps names synchronized with CAPABILITIES.json and requires each re
 - Inventory confirmation remains strict. Fuel consumption evidence covers coal/charcoal and exact 300-tick birch planks in ordinary furnaces; other fuels, remainders, re-ignition and background changes do not gain a general exception
 - Placement provenance records newly verified placements within one continuously observed session. An old coordinate, block type, or historical note cannot establish ownership
 - A supported window layout proves slot mapping, not every workstation recipe or workflow. Brewing, smithing, loom and cartography require their own effect fixtures before stronger claims
-- Bounded movement still needs separate ladder, water and unusual collision scenarios. Open-door work in PR #2 is reviewed separately and is not included here
+- Movement now includes conservative water/oxygen guards and special-terrain fixtures; unusual collision and real swimming remain separately unvalidated. The merged open-wooden-door repair is included
 - Vehicle input and mounting are partial. Full boat placement, riding and steering is not validated; sending `steer_vehicle` input does not implement a complete vehicle physics controller
 - Books/signs/chat are untrusted player-authored data. `read-book` closes an observation gap, while writing a book still requires subsequent authoritative readback to establish its final contents
 - Projectile, advanced combat, redstone, farming and unusual entity interactions are not certified merely by generic interaction tools
@@ -123,10 +123,10 @@ These are upstream implementation references, not a Mojang protocol specificatio
 | `furnace_action` | Furnaces and workstations | dedicated-fixture | `tests/verified-furnace-fuel-race.test.ts` |
 | `furnace_status` | Furnaces and workstations | catalog-only | — |
 | `smelt_item` | Furnaces and workstations | catalog-only | — |
-| `enchant_item` | Furnaces and workstations | catalog-only | — |
-| `anvil_combine` | Furnaces and workstations | catalog-only | — |
-| `open_villager` | Furnaces and workstations | catalog-only | — |
-| `trade_with_villager` | Furnaces and workstations | catalog-only | — |
+| `enchant_item` | Furnaces and workstations | dedicated-fixture | `tests/reviewer-complete-controls.test.ts` |
+| `anvil_combine` | Furnaces and workstations | dedicated-fixture | `tests/reviewer-complete-controls.test.ts` |
+| `open_villager` | Furnaces and workstations | dedicated-fixture | `tests/reviewer-complete-controls.test.ts` |
+| `trade_with_villager` | Furnaces and workstations | dedicated-fixture | `tests/reviewer-complete-controls.test.ts` |
 | `list_recipes` | Crafting | catalog-only | — |
 | `craft_item` | Crafting | dedicated-fixture | `tests/review-capability-gaps.test.ts` |
 | `collect_block` | Blocks and building | catalog-only | — |

@@ -55,6 +55,20 @@ IPC and dependency locks are unchanged. Offline fixtures use the repository's
 locked Minecraft 1.21.1 data and actual A*/collision/controller implementations;
 they do not establish real-server acceptance of this implementation.
 
+## Additive ecosystem candidate (3.2.0-rc.1)
+
+IPC remains version 1. New session-only workflow tools and the optional
+`--observe-port` startup flag are additive. `get-session-status` adds an `observer`
+field (`null` when disabled). An already running backend does not acquire new
+flags, tools or dependencies by replacing a frontend. Launching the observer
+requires a new explicitly authorized backend startup; no automatic migration,
+controller replay, listener exposure or deployment is performed.
+
+The observer uses the existing bot, binds only `127.0.0.1`, filters sensitive text
+and block-entity/item NBT, and cannot dispatch gameplay. Bounded workflows retain
+existing authority/fence rules and add revision-checked, one-batch-at-a-time plans.
+See [observation](READONLY-OBSERVER.md) and [workflows](WORKFLOWS.md).
+
 ## Change policy
 
 Schema or semantic changes require a documented compatibility decision, regression fixture and maintainer review. Breaking tool/IPC contracts require a version boundary and migration notes. Do not infer compatibility solely from matching tool names or package version. The public candidate is 3.2.0-rc.1 so it cannot be confused with the historical base.

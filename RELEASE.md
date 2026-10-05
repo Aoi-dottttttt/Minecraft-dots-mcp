@@ -1,17 +1,16 @@
 # Public candidate: 3.2.0-rc.1
 
-This maintenance candidate builds on the public 3.1.1-rc.1 source and the merged frontend transport-uncertainty contribution (PR #1). It is not a claim of complete real-server acceptance.
+This additive candidate builds on public main `5725756a8e2bec268e0de8cf05c173c2cfc3af3b`, including the merged open-wooden-door repair. It requires maintainer review and is not a deployment or real-server acceptance claim.
 
-## Maintenance changes
+## Ecosystem integration
 
-- Exact birch-plank fuel conservation in an ordinary furnace, preserving all confirmation barriers
-- Session-local self-placement provenance shared by native placement and verified generic block use
-- Cancellation propagation through equipment/crafting and book-edit preparation
-- Bounded authoritative book-page observation with stable pagination and untrusted text labels
-- No-food preflight, fenced plain chat and existing bridge certificate-environment preservation
-- More informative response-loss controller fixture diagnostics and an explicit capability/evidence matrix
+- Local read-only dashboard, server-authoritative inventory and real-time Prismarine 3D reconstruction, enabled only by an explicit new-session flag
+- Conservative movement safety, bounded surfacing and a verified boat launch sequence with offline state/packet evidence
+- Explicitly stepped session-only gather/storage/restock and simple-block schematic workflows with no retry/resume after uncertainty
+- Reuse of Prismarine renderer/assets/schematic packages and a minimal MIT-licensed upstream state-machine core; full web-inventory and state-machine servers are deliberately excluded after dependency/lifecycle review
+- Corrected evidence matrix, updated capability catalog and dedicated browser CI over a synthetic world
 
-These changes require an explicitly started new backend. Existing state, controller queues and placement ownership are never imported automatically. Open PR #2 remains separate from this candidate.
+The candidate never restarts or hot-patches an existing game. It contains no private game memory, bridge implementation, real connection configuration, credentials or world state. IPC remains 1; version reporting distinguishes this source from earlier running backends. See docs/READONLY-OBSERVER.md, docs/WORKFLOWS.md and docs/COMPATIBILITY.md for exact limits.
 
 ## Functional foundation
 

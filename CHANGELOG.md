@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.2.0-rc.1: bounded ecosystem integration candidate
+
+- Add an opt-in, loopback-only status/inventory dashboard and Prismarine 3D reconstruction sharing the existing bot; drop all browser gameplay input and remove private text/NBT from observations
+- Add conservative dry navigation and explicit oxygen/surfacing and boat-launch checks, with special-terrain fixtures; retain bounded actions, no automatic digging/building and no autonomous rescue claim
+- Add session-local, explicitly stepped gather → storage → restock and bounded simple-block schematic plans, using a minimal MIT upstream state-machine core and `prismarine-schematic`; no automatic resume/replay or full autonomous farm/builder claim
+- Correct workstation evidence labels and remove the disabled screenshot recommendation from the map tool
+- Pin observation dependencies, retain all upstream notices, and add HTTP/socket/worker and synthetic-browser CI checks
+
+This is a source/PR candidate. It has not been merged, installed into a live backend, or accepted on a real server. IPC remains version 1; existing backend code is unchanged until the user explicitly starts a new authorized session. See VALIDATION.json and exact-commit CI for completed and blocked checks.
+
 ## 3.1.1-rc.2: verified maintenance candidate
 
 - Verify detach cancellation across both IPC rejection and settled backend inventory-fence rejection, with no-motion and no-extra-click assertions

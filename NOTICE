@@ -20,6 +20,12 @@ vendor/awesome-mineflayer-mcp/. Dependency-only package manifest/lock changes an
 packages are documented in vendor/awesome-mineflayer-mcp/LOCAL-CHANGES.md
 and SECURITY.md.
 
+The limited state-machine core derives from mineflayer-statemachine 1.7.0
+(PrismarineJS), MIT; original license, source hashes and exact adaptation are
+retained in vendor/mineflayer-statemachine-core/NOTICE.md and LICENSE.
+Prismarine viewer, assets and schematic packages are reused as separately
+installed locked dependencies; their bundled licenses remain intact.
+
 Dependencies are installed separately and retain their own licenses. The source
 archive does not include node_modules, private configuration, credentials,
 worlds, runtime logs or command queues. Upstream author/copyright names and

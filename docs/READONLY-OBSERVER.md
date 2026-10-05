@@ -38,6 +38,6 @@ Dependencies are locked and installed with `npm ci --ignore-scripts`. The publis
 
 ## Verification
 
-`tests/readonly-observer.test.ts` tests snapshots, origin/host/method restrictions, static assets, websocket and polling transport, rejected application input, connection limits and listener cleanup. `npm run test:observer` verifies explicit flag startup/status/shutdown with the networkless fake backend. `npm run test:observer-browser` runs Chromium against a synthetic grass-block world, checks the dashboard after reload, checks textured 3D pixels and navigates back; it never connects to Minecraft.
+`tests/readonly-observer.test.ts` tests snapshots, origin/host/method restrictions, static assets, websocket and polling transport, rejected application input, connection limits and listener cleanup. `npm run test:observer` verifies explicit flag startup/status/shutdown with the networkless fake backend. `npm run test:observer-worker` executes the exact pinned worker against a neutral 1.21.1 chunk and verifies nonempty geometry without a browser. `npm run test:observer-browser` runs Chromium against a synthetic grass-block world, checks the dashboard after reload, checks textured 3D pixels and navigates back; it never connects to Minecraft.
 
 The browser check runs in the dedicated hosted CI job because some local execution environments prohibit Chromium's Unix sockets. See `VALIDATION.json` and exact-commit CI for observed results; an HTTP fixture pass alone is not visual or real-server acceptance.

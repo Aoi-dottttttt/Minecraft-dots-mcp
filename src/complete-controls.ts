@@ -270,6 +270,7 @@ export async function registerCompleteControls(options:Options):Promise<{names:s
     if(def.name==='trade_with_villager')def.inputSchema={...def.inputSchema,times:z4.number().int().min(1).max(64).optional()};
     if(def.name==='anvil_combine')def.inputSchema={...def.inputSchema,name:z4.string().max(35).optional()};
     if(def.name==='activate_block')def.inputSchema={...def.inputSchema,desiredState:z4.enum(['open','closed','on','off']).optional()};
+    if(def.name==='render_map')def.description='Render a bounded two-dimensional schematic of loaded blocks; not a native screenshot. The optional local read-only observer provides reconstructed 3D separately.';
     if(def.name==='get_screenshot')return; // no misleading native screenshot claim
     if(CLEANUP.has(def.name)){
       options.markRead(def.name);server.tool(def.name,'Stop active work and release controls; no reconnect.',{},async()=>{await stop();return json({stopped:true});});names.push(def.name);return;

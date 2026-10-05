@@ -6,6 +6,13 @@ The guarded runtime reuses tool modules from awesome-mineflayer-mcp 1.3.2 (commi
 
 Observation, bounded movement/look/pathfinding, mining/placement, inventory and crafting, containers/furnaces, block interaction, consumption, farming, non-player combat, sleep, fishing, workstation operations, chat, signs/books, event observation and waypoints have code paths and offline coverage of varying depth. CAPABILITIES.json records registered schemas, not validated independent abilities. Aliases are included in that count.
 
+## New opt-in and bounded integrations
+
+- Read-only local dashboard and 3D reconstruction: [observer](docs/READONLY-OBSERVER.md)
+- Session-only, explicitly stepped gather/storage/restock and simple-block schematic placement: [workflows](docs/WORKFLOWS.md)
+
+These reuse the existing bot and safety lane. They add no background autonomous loop, second bot, private memory integration or public listener. New movement/boat fixtures do not establish live swimming or boat acceptance.
+
 ## Guarded entrypoint only
 
 The integrated runtime excludes raw packets, arbitrary code/commands, creative/admin tools, alternate connection controls, automatic reconnect, physics bypasses and caller-supplied chat regex tools. It shares a serialized action lane and requires fresh server inventory/cursor evidence. Uncertain mutations create a fence. A new frontend cannot clear backend fences or replay old actions.
