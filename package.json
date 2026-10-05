@@ -1,6 +1,6 @@
 {
   "name": "minecraft-mcp-server",
-  "version": "3.1.1-rc.2",
+  "version": "3.2.0-rc.1",
   "type": "module",
   "main": "dist/main.js",
   "bin": {
@@ -29,7 +29,7 @@
     "test:stdio": "node scripts/smoke-stdio.mjs",
     "test:protocol": "node scripts/smoke-protocol.mjs",
     "typecheck": "tsc --noEmit",
-    "verify": "npm run build && npm run typecheck && npm run lint && npm test && npm run test:doors && npm run test:stdio && npm run test:protocol && npm run test:runtime && npm run test:chat && npm run test:frontend && npm run test:launcher && npm run test:daemon && npm run test:controller && npm run test:public && npm run test:capabilities",
+    "verify": "npm run build && npm run typecheck && npm run lint && npm test && npm run test:doors && npm run test:stdio && npm run test:protocol && npm run test:runtime && npm run test:chat && npm run test:frontend && npm run test:launcher && npm run test:daemon && npm run test:controller && npm run test:observer && npm run test:observer-worker && npm run test:public && npm run test:capabilities",
     "test:runtime": "node scripts/smoke-runtime.mjs",
     "test:launcher": "python3 scripts/test-launch-lifecycle.py",
     "test:upstream": "npm --prefix vendor/awesome-mineflayer-mcp test",
@@ -40,20 +40,29 @@
     "test:frontend": "node --experimental-vm-modules scripts/smoke-frontend-uncertainty.mjs",
     "test:chat": "node scripts/test-fenced-plain-chat.mjs",
     "test:capabilities": "node scripts/check-capability-matrix.mjs",
-    "test:doors": "node --test --test-timeout=10000 tests/open-door-navigation.test.cjs"
+    "test:doors": "node --test --test-timeout=10000 tests/open-door-navigation.test.cjs",
+    "test:observer": "node scripts/smoke-observer-runtime.mjs",
+    "test:observer-browser": "node scripts/test-observer-browser.mjs",
+    "test:observer-worker": "node scripts/test-observer-worker.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
+    "express": "4.22.3",
+    "minecraft-assets": "1.17.0",
     "minecraft-data": "^3.105.0",
     "mineflayer": "4.39.0",
     "mineflayer-pathfinder": "^2.4.2",
     "prismarine-item": "1.17.0",
+    "prismarine-schematic": "1.3.0",
+    "prismarine-viewer": "1.33.0",
+    "socket.io": "4.8.3",
     "vec3": "^0.1.8",
     "yargs": "^18.0.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
     "@ava/typescript": "^6.0.0",
+    "@types/express": "4.17.25",
     "@types/node": "^25.2.3",
     "@types/sinon": "^21.0.0",
     "@types/vec3": "^0.1.4",
@@ -64,7 +73,9 @@
     "eslint": "^9.39.2",
     "eslint-plugin-ava": "^15.1.0",
     "globals": "^17.3.0",
+    "playwright": "1.63.0",
     "sinon": "^21.0.1",
+    "socket.io-client": "4.8.3",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"

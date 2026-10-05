@@ -1,4 +1,4 @@
-# Public candidate: 3.1.1-rc.2
+# Public candidate: 3.2.0-rc.1
 
 This maintenance candidate builds on the public 3.1.1-rc.1 source and the merged frontend transport-uncertainty contribution (PR #1). It is not a claim of complete real-server acceptance.
 

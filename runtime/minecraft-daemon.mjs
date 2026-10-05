@@ -9,9 +9,10 @@ import { chmodSync, closeSync, constants, existsSync, lstatSync, openSync, readd
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { validateObserverPort } from '../dist/readonly-observer.js';
 import { IPC_VERSION, MAX_FRAME_BYTES, SOCKET_NAME, encodeFrame, stableJson, validateStateDir } from './minecraft-ipc.mjs';
 
-const DAEMON_VERSION = '3.1.1-rc.2';
+const DAEMON_VERSION = '3.2.0-rc.1';
 const CALL_TIMEOUT_MS = 180000;
 const MAX_LEDGER_BYTES = 16 * MAX_FRAME_BYTES;
 const MAX_PEER_REQUESTS = 8, MAX_GLOBAL_REQUESTS = 32;
@@ -22,8 +23,9 @@ if (!['--offline-fixture', '--user-started-session'].includes(mode)) throw Error
 const fixture = mode === '--offline-fixture';
 const port = fixture ? null : Number(args.shift());
 if (!fixture && (!Number.isInteger(port) || port < 1024 || port > 65535)) throw Error('Valid explicitly started loopback bridge port required');
-const { values } = parseArgs({ args, options: { 'state-dir': { type: 'string' }, 'username': { type: 'string', default: 'MCPBot' } }, strict: true });
+const { values } = parseArgs({ args, options: { 'state-dir': { type: 'string' }, 'username': { type: 'string', default: 'MCPBot' }, 'observe-port': { type: 'string' } }, strict: true });
 if (!/^[A-Za-z0-9_]{1,16}$/.test(values.username)) throw Error('Username must be 1..16 letters, digits or underscores');
+const observerPort = validateObserverPort(values['observe-port']);
 process.umask(0o077);
 const stateDir = validateStateDir(values['state-dir'], { create: true });
 if (readdirSync(stateDir).length) throw Error('Fresh daemon state directory required; refusing previous session or command replay');
@@ -50,7 +52,7 @@ const save = (name, value) => {
 };
 const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => ['HOME', 'USER', 'LOGNAME', 'PATH', 'LANG', 'LC_ALL', 'TZ'].includes(key)));
 const transport = new StdioClientTransport({ command: process.execPath,
-  args: [join(runtimeDir, 'minecraft-server.mjs'), mode, ...(fixture ? [] : [String(port)]), '--session-id', sessionId, '--username', values.username, '--state-dir', join(stateDir, 'gameplay-state')],
+  args: [join(runtimeDir, 'minecraft-server.mjs'), mode, ...(fixture ? [] : [String(port)]), '--session-id', sessionId, '--username', values.username, '--state-dir', join(stateDir, 'gameplay-state'), ...(observerPort === null ? [] : ['--observe-port', String(observerPort)])],
   cwd: runtimeDir, env, stderr: 'pipe' });
 // Drain stderr so a full pipe cannot hang gameplay. Do not copy potentially
 // sensitive game text, bridge data, or arbitrary protocol data into diagnostics.

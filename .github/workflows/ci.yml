@@ -32,3 +32,24 @@ jobs:
           npm run test:upstream
       - name: Ensure tracked source was not changed by tests
         run: git diff --exit-code
+
+  observer-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Install Chromium for synthetic observer verification
+        run: npx playwright install --with-deps chromium
+      - name: Render dashboard and fixture world
+        run: |
+          npm run build
+          npm run test:observer-browser
+      - name: Ensure tracked source was not changed by tests
+        run: git diff --exit-code

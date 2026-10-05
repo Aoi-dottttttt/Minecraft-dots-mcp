@@ -4,8 +4,8 @@ Target: Minecraft Java 1.21.1, protocol 767, offline protocol identity through a
 
 ## Independent versions
 
-- Package/backend version: currently 3.1.1-rc.2
-- Frontend/controller version: currently 3.1.1-rc.2
+- Package/backend version: currently 3.2.0-rc.1
+- Frontend/controller version: currently 3.2.0-rc.1
 - Local IPC protocol version: 1, checked during attachment
 - Tool schemas: CAPABILITIES.json, regenerated from the networkless fixture
 
@@ -57,7 +57,7 @@ they do not establish real-server acceptance of this implementation.
 
 ## Change policy
 
-Schema or semantic changes require a documented compatibility decision, regression fixture and maintainer review. Breaking tool/IPC contracts require a version boundary and migration notes. Do not infer compatibility solely from matching tool names or package version. The public candidate is 3.1.1-rc.2 so it cannot be confused with the historical base.
+Schema or semantic changes require a documented compatibility decision, regression fixture and maintainer review. Breaking tool/IPC contracts require a version boundary and migration notes. Do not infer compatibility solely from matching tool names or package version. The public candidate is 3.2.0-rc.1 so it cannot be confused with the historical base.
 
 ## Verification boundaries
 
