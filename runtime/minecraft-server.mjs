@@ -36,7 +36,7 @@ import { registerFurnaceTools } from '../dist/tools/furnace-tools.js';
 const fixture=process.argv[2]==='--offline-fixture';
 const port=Number(process.argv[3]);
 if(!fixture&&(process.argv[2]!=='--user-started-session'||!Number.isInteger(port)||port<1024||port>65535))throw Error('Explicit user-started mode and bridge port required');
-const backendVersion='3.2.0-rc.2';
+const backendVersion='3.2.0-rc.3';
 const backendStartedAt=new Date().toISOString();
 const {values:backendOptions}=parseArgs({args:process.argv.slice(fixture?3:4),options:{'session-id':{type:'string'},'state-dir':{type:'string'},'username':{type:'string',default:'MCPBot'},'observe-port':{type:'string'},'observe-world-files':{type:'boolean',default:false}},strict:true});
 const username=backendOptions.username;

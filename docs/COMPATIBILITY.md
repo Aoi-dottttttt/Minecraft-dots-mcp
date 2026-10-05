@@ -4,8 +4,8 @@ Target: Minecraft Java 1.21.1, protocol 767, offline protocol identity through a
 
 ## Independent versions
 
-- Package/backend version: currently 3.2.0-rc.2
-- Frontend/controller version: currently 3.2.0-rc.2
+- Package/backend version: currently 3.2.0-rc.3
+- Frontend/controller version: currently 3.2.0-rc.3
 - Local IPC protocol version: 1, checked during attachment
 - Tool schemas: CAPABILITIES.json, regenerated from the networkless fixture
 
@@ -57,7 +57,7 @@ with this candidate. See [movement safety](MOVEMENT-SAFETY.md). Offline fixtures
 locked Minecraft 1.21.1 data and actual A*/collision/controller implementations;
 they do not establish real-server acceptance of this implementation.
 
-## Additive ecosystem candidate (3.2.0-rc.2)
+## Additive ecosystem candidate (3.2.0-rc.3)
 
 IPC remains version 1. New session-only workflow tools and the optional
 `--observe-port` startup flag are additive. `get-session-status` adds an `observer`
@@ -79,9 +79,18 @@ values are not evidence. Existing numeric consumers must handle unknown rather
 than substitute full air. This is a safety correction within IPC 1; it requires
 a newly started backend, and does not authorize automatic rescue or reconnect.
 
+## Native file observation (3.2.0-rc.3)
+
+`--observe-world-files` is an additive default-off boolean startup flag.
+`get-session-status` adds `worldObserver` (null when disabled). The loaded-cell
+file and mesh schemas are each version 1 and retain an absolute five-second
+observation expiry. They are read-only outputs, not gameplay IPC or controls.
+Godot is an optional separately installed graphical dependency; it is not bundled
+or started by the backend. Existing sessions are not hot-upgraded.
+
 ## Change policy
 
-Schema or semantic changes require a documented compatibility decision, regression fixture and maintainer review. Breaking tool/IPC contracts require a version boundary and migration notes. Do not infer compatibility solely from matching tool names or package version. The public candidate is 3.2.0-rc.2 so it cannot be confused with the historical base.
+Schema or semantic changes require a documented compatibility decision, regression fixture and maintainer review. Breaking tool/IPC contracts require a version boundary and migration notes. Do not infer compatibility solely from matching tool names or package version. The public candidate is 3.2.0-rc.3 so it cannot be confused with the historical base.
 
 ## Verification boundaries
 

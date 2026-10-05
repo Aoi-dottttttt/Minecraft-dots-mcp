@@ -25,12 +25,21 @@ var test_frames = 0
 var frame_counter = 0
 var synthetic = false
 var last_stale_message = ""
+var verify_pixels = false
+var pixel_busy = false
+var saw_live_pixels = false
+var saw_geometry_change = false
+var first_pixel_vertices = 0
+var pixel_started = 0
 
 func _ready():
 	get_window().title = "Minecraft - Native Read-only 3D Reconstruction"
 	Engine.max_fps = 15
 	var args = OS.get_cmdline_user_args()
 	synthetic = args.has("--synthetic-fixture")
+	verify_pixels = args.has("--verify-pixels")
+	pixel_started = Time.get_ticks_msec()
+	if verify_pixels and not synthetic: get_tree().quit(1); return
 	for i in range(args.size()):
 		if args[i] == "--directory" and i + 1 < args.size(): directory = args[i + 1]
 		if args[i] == "--atlas" and i + 1 < args.size(): atlas_path = args[i + 1]
@@ -201,6 +210,10 @@ func add_bounds(base, size):
 
 func _process(delta):
 	frame_counter += 1
+	if verify_pixels:
+		if Time.get_ticks_msec() - pixel_started > 60000: print("Native pixel verification timed out"); get_tree().quit(1)
+		if saw_live_pixels and is_live and vertex_count != first_pixel_vertices: saw_geometry_change = true
+		if not pixel_busy and ((is_live and not saw_live_pixels) or (saw_live_pixels and saw_geometry_change and not is_live)): verify_rendered_pixels()
 	if test_frames > 0 and frame_counter >= test_frames:
 		print(JSON.stringify({"frames":frame_counter,"live":is_live,"vertices":vertex_count,"fps":Engine.get_frames_per_second(),"memoryBytes":OS.get_static_memory_usage()})); get_tree().quit()
 	if is_live and Time.get_unix_time_from_system() >= deadline: mark_stale("World lease expired; old geometry cleared")
@@ -216,3 +229,25 @@ func _unhandled_input(event):
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP: distance = max(4, distance - 1)
 		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN: distance = min(50, distance + 1)
+
+func verify_rendered_pixels():
+	pixel_busy = true
+	await RenderingServer.frame_post_draw
+	var pixels = get_viewport().get_texture().get_image()
+	var green = 0; var brown = 0; var dark = 0; var total = 0
+	for y in range(0, pixels.get_height(), 4):
+		for x in range(0, pixels.get_width(), 4):
+			var c = pixels.get_pixel(x, y); total += 1
+			if c.g > c.r * 1.1 and c.g > c.b * 1.3 and c.g > 0.15: green += 1
+			if c.r > c.g * 1.15 and c.g > c.b * 1.1 and c.r > 0.2: brown += 1
+			if max(c.r, max(c.g, c.b)) < 0.1: dark += 1
+	if is_live:
+		var passed = green > 300 and brown > 300 and world.get_child_count() > 0
+		print(JSON.stringify({"nativePixelCheck":true,"synthetic":synthetic,"stage":"live","passed":passed,"greenPixels":green,"brownPixels":brown,"vertices":vertex_count}))
+		if not passed: get_tree().quit(1)
+		else: saw_live_pixels = true; first_pixel_vertices = vertex_count
+	else:
+		var passed = saw_live_pixels and saw_geometry_change and stale_cover.visible and world.get_child_count() == 0 and green < 10 and dark > total * 0.9
+		print(JSON.stringify({"nativePixelCheck":true,"synthetic":synthetic,"stage":"stale","passed":passed,"geometryChanged":saw_geometry_change,"greenPixels":green,"darkFraction":float(dark)/total}))
+		get_tree().quit(0 if passed else 1)
+	pixel_busy = false

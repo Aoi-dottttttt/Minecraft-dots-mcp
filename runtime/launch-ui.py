@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Modified for the public-candidate release; see RELEASE.md.
-# Modified for 3.2.0-rc.2 release (2026-10-05). See RELEASE.md.
+# Modified for 3.2.0-rc.3 release (2026-10-05). See RELEASE.md.
 """Explicit Start, persistent game daemon, and replaceable controller frontend.
 
 Opening a window reads only non-secret ownership/status reports. The bridge is
@@ -26,7 +26,7 @@ import uuid
 sys.dont_write_bytecode = True
 from process_gate import ProcessGate
 
-VERSION = '3.2.0-rc.2'
+VERSION = '3.2.0-rc.3'
 BASE = pathlib.Path(__file__).resolve().parent
 SESSION_NAME = re.compile(r'^session-\d{8}T\d{6}Z-[a-f0-9]{12}$')
 

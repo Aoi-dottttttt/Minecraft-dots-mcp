@@ -65,7 +65,9 @@ def main():
     parser.add_argument('--directory', required=True)
     parser.add_argument('--synthetic-fixture', action='store_true')
     parser.add_argument('--test-frames', type=int, default=0)
+    parser.add_argument('--verify-pixels', action='store_true')
     args = parser.parse_args()
+    if args.verify_pixels and not args.synthetic_fixture: raise ValueError('Pixel verification is restricted to a synthetic fixture')
     if args.test_frames < 0 or args.test_frames > 18000: raise ValueError('Test frames must be 0..18000')
     directory = private_directory(args.directory)
     program = shutil.which('godot')
@@ -82,6 +84,7 @@ def main():
     command = [program, '--path', str(root / 'runtime/native3d'), '--rendering-method', 'gl_compatibility', '--audio-driver', 'Dummy', '--', '--directory', str(mirror), '--atlas', str(atlas)]
     if args.synthetic_fixture: command += ['--synthetic-fixture']
     if args.test_frames: command += ['--test-frames', str(args.test_frames)]
+    if args.verify_pixels: command += ['--verify-pixels']
     # Reject a pre-existing unsafe report before launching any process.
     metadata = directory / 'native-view-run.json'
     atomic_write(metadata, json.dumps({'runDirectory':str(run),'pid':None,'synthetic':args.synthetic_fixture,'state':'starting','networkRequests':False,'gameConnection':False}).encode())
@@ -109,4 +112,7 @@ def main():
     atomic_write(metadata, json.dumps({'runDirectory':str(run),'pid':child.pid,'state':'closed','synthetic':args.synthetic_fixture,'gameConnection':False}).encode())
     atomic_write(run / 'resources.json', (json.dumps(report,indent=2)+'\n').encode())
     print(json.dumps({'runDirectory':str(run),**report}))
+    if args.verify_pixels:
+        print((run / 'renderer.log').read_text())
+        raise SystemExit(child.returncode or 0)
 if __name__ == '__main__': main()

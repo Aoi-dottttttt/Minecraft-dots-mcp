@@ -1,12 +1,21 @@
-# Public candidate: 3.2.0-rc.2
+# Public candidate: 3.2.0-rc.3
 
 This additive candidate builds on public main `5725756a8e2bec268e0de8cf05c173c2cfc3af3b`, including the merged open-wooden-door repair. It requires maintainer review and is not a deployment or real-server acceptance claim.
+
+## rc.3 bounded native observation
+
+An explicit new-session flag may write a small, sanitized region of already
+loaded world data into private files. A separately launched file-only mesh worker
+and Godot view render that bounded reconstruction, with no gameplay input path.
+It is not a native Minecraft screenshot or complete client. Defaults create no
+exporter or GUI. Synthetic pixel checks and resource measurements are separate
+from live-world acceptance and deployment.
 
 ## rc.2 safety correction
 
 Own-player raw air metadata replaces the upstream unattributed oxygen cache for
 navigation, surfacing and reports. A file-only Tk status/inventory window is
-available without new sockets or game connections. Native 3D is not included.
+available without new sockets or game connections. Native 3D has its own opt-in lifecycle and limits, described above.
 Swimming/boat and gather closed-loop acceptance remain unestablished. This
 version requires a separately authorized normal restart; no live hot patching.
 

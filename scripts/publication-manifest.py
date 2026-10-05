@@ -7,7 +7,7 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-GENERATED = {'node_modules', 'dist', '.git', '__pycache__', 'coverage', '.pytest_cache'}
+GENERATED = {'node_modules', 'dist', '.git', '__pycache__', 'coverage', '.pytest_cache', '.godot'}
 MANIFEST = 'SHA256SUMS'
 
 
@@ -25,6 +25,8 @@ def main():
         path = pathlib.PurePosixPath(name)
         if path.is_absolute() or '..' in path.parts or any(part in GENERATED for part in path.parts):
             raise ValueError('Unsafe allowlist path: ' + name)
+        if path.name in {'world-frame.json', 'mesh-frame.json', 'native-view-run.json'}:
+            raise ValueError('Private observation frame must not be published: ' + name)
         if name.endswith(('.log', '.jsonl', '.pyc', '.tgz', '.zip', '.tar.gz')) or (path.name.startswith('.env') and path.name != '.env.example'):
             raise ValueError('Private/generated file must not be published: ' + name)
     found = set()

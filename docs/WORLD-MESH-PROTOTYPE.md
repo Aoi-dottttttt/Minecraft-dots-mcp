@@ -1,8 +1,27 @@
-# Isolated file-only mesh prototype
+# Bounded native 3D reconstruction (experimental)
 
-This branch is not enabled by the runtime and is not part of the rc2 safety/Tk
-release. No network service, browser, game connection, control file or game action
-is created. Build with the existing locked dependencies; install nothing else.
+This experimental rc.3 path is disabled by default. It reuses the existing bot
+and never creates a network service, browser, extra game connection or control
+input. It is a reconstruction of a small loaded region, not a native Minecraft
+client screenshot or full-client implementation. No private world data is shipped.
+
+## Explicit new-session startup
+
+Add `--observe-world-files` only when starting a new authorized daemon session:
+
+```sh
+node runtime/minecraft-daemon.mjs --user-started-session 25565 \
+  --username ExampleBot --state-dir "$GAME_DIR" --observe-world-files
+```
+
+The boolean flag accepts no arbitrary output path. The backend writes only below
+its private gameplay state, in `native-observer/world-frame.json`. Read the exact
+path from `get-session-status.worldObserver.path`; use its containing directory
+for the commands below. Without the flag, no file exporter starts. It does not
+start the HTTP viewer, mesh worker or Godot automatically. Export startup/write
+failure is reported with a fixed error code and preserves the gameplay backend.
+An already running backend cannot acquire this feature without an authorized
+normal restart. All game actions still belong to the one existing controller.
 
 An explicitly authorized caller can start `createWorldFileExporter` on its one
 already-connected bot. Its private `world-frame.json` contains at most 17×13×17
@@ -78,9 +97,9 @@ model/texture source remains the official Prismarine package, not fabricated
 placeholder cubes. Minecraft screenshots and live-server acceptance are not
 claimed by these synthetic tests.
 
-## Godot native consumer prototype
+## Godot native consumer
 
-An installed Godot 4.6-compatible executable is required. This branch does not
+An installed Godot 4.6-compatible executable is required (tested with 4.6.3). This project does not
 install software, expose a network service or activate the backend exporter.
 Use the supported Python entry, not a browser or a direct untrusted-file engine
 argument:
@@ -113,7 +132,7 @@ complete-world visibility are claimed. Cropped edges may expose cutaway faces.
 
 ### Neutral verification
 
-- 18 TypeScript exporter/mesh fixtures, including real FIFO rejection and close
+- 19 TypeScript exporter/mesh fixtures, including real FIFO rejection and close
 - 9 Python relay fixtures: preserved lease, unknown/error clear, nonblocking
   FIFO, symlink target preservation, bounds/mode checks and atomic outputs
 - 15 Godot headless validation fixtures: JSON numeric types, expiry, fixed crop,
@@ -139,4 +158,5 @@ peaked at 384 ms/mesh, used about 380 MiB RSS and 9.85 CPU seconds. These are
 observed fixture measurements, not performance guarantees or live acceptance.
 The subsequent 2-fps stale mode is a conservative idle cap, not separately
 benchmarked here. The combined native reconstruction is heavier than the Tk
-status window and remains an isolated, unshipped prototype.
+status window and is opt-in experimental functionality. Exact-commit CI and separate live-world
+acceptance are required; source publication is not deployment.

@@ -19,7 +19,7 @@ class SnapshotTests(unittest.TestCase):
         self.path = self.root / 'status.json'
         self.now = dt.datetime(2026, 1, 1, tzinfo=dt.timezone.utc)
         self.raw = {'at': self.now.isoformat(), 'state': 'ready', 'ready': True, 'backend': {'status': {
-            'at': self.now.isoformat(), 'ready': True, 'ended': False, 'backendVersion': '3.2.0-rc.2', 'health': 20, 'food': 18, 'oxygen': 312,
+            'at': self.now.isoformat(), 'ready': True, 'ended': False, 'backendVersion': '3.2.0-rc.3', 'health': 20, 'food': 18, 'oxygen': 312,
             'position': {'x': 0.5, 'y': 64, 'z': 0.5}, 'dimension': 'overworld',
             'inventory': [{'slot': 9, 'name': 'stone', 'count': 2, 'nbt': {'secret': 'PRIVATE_BOOK'}}],
             'inventoryAuthority': {'ready': True, 'cursor': None, 'equipment': []},

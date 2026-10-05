@@ -1,8 +1,8 @@
 {
-  "candidate": "3.2.0-rc.2",
+  "candidate": "3.2.0-rc.3",
   "date": "2026-10-05",
   "baseCommit": "5725756a8e2bec268e0de8cf05c173c2cfc3af3b",
-  "status": "Oxygen-source correction and native file-only observer candidate; exact-head hosted CI required",
+  "status": "Bounded native 3D reconstruction candidate; local synthetic native pixels observed; exact-head four-job CI required",
   "environment": {
     "node": "24.19.0",
     "npm": "11.9.0",
@@ -38,7 +38,7 @@
     },
     "root_unit": {
       "status": "passed",
-      "tests": 631
+      "tests": 650
     },
     "open_door_navigation": {
       "status": "passed",
@@ -111,7 +111,7 @@
     },
     "verify_aggregate": {
       "status": "failed_in_local_environment",
-      "detail": "Build, types, lint, 631 units, doors90, terrain8, stdio/protocol/runtime/chat/frontend passed; stopped at launcher readiness. Remaining suites independently attempted"
+      "detail": "Final local build/type/lint, 650 units, 15 native status and 9 native relay fixtures, 170-tool runtime/catalog and world-file stdio checks passed. Hosted exact-head CI remains authoritative for Unix-socket and pixel suites."
     },
     "public_hardening": {
       "status": "passed",
@@ -133,6 +133,31 @@
       "status": "passed",
       "includedInRootUnit": true,
       "scope": "Actual locked entities plugin pollution reproduction and protocol 767 serialization; foreign low/high air cannot stop dry navigation or confirm surfacing; own identity/respawn/death/end invalidation and post-step revision required"
+    },
+    "world_export_mesh": {
+      "status": "passed",
+      "tests": 19,
+      "includedInRootUnit": true,
+      "scope": "Bounded loaded-cell export; original-lease geometry; lifecycle, regular-file, FIFO, permission and data redaction guards"
+    },
+    "native_relay": {
+      "status": "passed",
+      "tests": 9,
+      "scope": "Nonblocking private file relay, no symlink destination truncation, original lease retained, invalid/missing source stale"
+    },
+    "native_godot_validator": {
+      "status": "passed",
+      "tests": 15,
+      "scope": "Synthetic-only headless field, time, mask and world-space geometry checks"
+    },
+    "native_godot_pixels": {
+      "status": "manual_synthetic_passed_automated_ci_pending",
+      "scope": "Official textures, orbit, changing bounded geometry, unknown mask and clear-on-expiry observed in native Linux Godot; not a Minecraft client screenshot or live-world certification"
+    },
+    "world_file_runtime": {
+      "status": "passed",
+      "cases": 5,
+      "scope": "Default-off, private unknown frame, quit stale, failure preserves game, strict boolean daemon forwarding"
     }
   },
   "dependencyAudit": {
@@ -158,12 +183,13 @@
     "jobs": [
       "offline (22)",
       "offline (24)",
-      "observer-browser"
+      "observer-browser",
+      "native3d"
     ],
     "sourceOfTruth": "GitHub Actions results on the candidate PR head; this offline snapshot does not assert future CI success",
     "previousRun": {
-      "head": "e78de1a008d04acdab286ceedee589422a4d554d",
-      "url": "https://github.com/Aoi-dottttttt/Minecraft-dots-mcp/actions/runs/37289395832",
+      "head": "0a55024ba4e5785b90096fded0858af3874ccf7a",
+      "url": "https://github.com/Aoi-dottttttt/Minecraft-dots-mcp/actions/runs/37299452578",
       "offline22": "passed",
       "offline24": "passed",
       "observerBrowser": "passed"
@@ -179,6 +205,6 @@
     "newObserverDefaultEnabled": false,
     "observerBind": "127.0.0.1 only",
     "privateMemoryIncluded": false,
-    "realServerAcceptance": "Prior rc.1 smoke did not establish water/boat or gather closed-loop acceptance. This rc.2 source is not yet deployed; no live acceptance is claimed."
+    "realServerAcceptance": "Prior rc.2 inventory/memory/short dry movement checks do not establish this rc.3 native 3D live-world reconstruction. rc.3 not yet deployed; swimming/boat and gather closed-loop acceptance remain unestablished."
   }
 }

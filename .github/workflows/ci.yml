@@ -53,3 +53,35 @@ jobs:
           npm run test:observer-browser
       - name: Ensure tracked source was not changed by tests
         run: git diff --exit-code
+
+  native3d:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install exact official Godot and display libraries
+        run: |
+          curl --fail --location --retry 2 https://github.com/godotengine/godot-builds/releases/download/4.6.3-stable/Godot_v4.6.3-stable_linux.x86_64.zip -o "$RUNNER_TEMP/godot.zip"
+          echo "d0bc2113065e481c9c2c2b2c37daa4e8be3fe9e27f0ab9ab0b6096e9a37907f3  $RUNNER_TEMP/godot.zip" | sha256sum --check
+          mkdir "$RUNNER_TEMP/godot"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP/godot"
+          mv "$RUNNER_TEMP/godot/Godot_v4.6.3-stable_linux.x86_64" "$RUNNER_TEMP/godot/godot"
+          chmod +x "$RUNNER_TEMP/godot/godot"
+          echo "$RUNNER_TEMP/godot" >> "$GITHUB_PATH"
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1-mesa-dri
+      - name: Build locked source and validate native file guards
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+          npm run test:native-relay
+          godot --headless --path runtime/native3d --script res://validate-fixture.gd
+      - name: Verify synthetic native pixels and stale clear
+        run: xvfb-run -a npm run test:native-pixels
+      - name: Ensure tracked source was not changed by tests
+        run: git diff --exit-code

@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.2.0-rc.3: optional bounded native 3D reconstruction
+
+- Add a default-off `--observe-world-files` startup flag on the existing bot, exporting only a private, bounded set of loaded block states/light/biomes every two seconds
+- Reuse the pinned official Prismarine geometry and atlas in a file-only Godot view with local camera controls, crop/unknown indicators, and enforced stale clearing
+- Bound file sizes, vertices and cadence; reject links, special files and out-of-range geometry; preserve the original observation lease through all consumers
+- Add source/privacy guards, real FIFO regressions and synthetic native pixel CI with an exact SHA-pinned official Godot build
+- This is a limited reconstruction, not a native Minecraft client screenshot, full-world viewer or proof of live swimming/workflow acceptance
+
 ## 3.2.0-rc.2: own-player air evidence and native status window
 
 - Fix oxygen provenance: the pinned entity plugin can report other entities' air as the player's. Guarded navigation, surfacing and reports now use raw current-player protocol metadata only, with explicit unknown/age/revision information and lifecycle invalidation

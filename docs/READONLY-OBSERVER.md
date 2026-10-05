@@ -50,7 +50,7 @@ Older backend air readings are labeled unverified. rc.2 self-air samples show
 their provenance and age; a fresh status file does not mean a new air sample.
 
 This is a native **status and inventory window**, not a 3D renderer or a way to
-bypass browser access restrictions. Native 3D remains separate, unshipped work.
+bypass browser access restrictions. For the separately enabled native 3D path, see [bounded native reconstruction](WORLD-MESH-PROTOTYPE.md). It uses private files and an installed Godot runtime, not this status panel or a browser-policy workaround.
 Neutral parser tests run with `npm run test:observer-ui`. A desktop rendering
 check observed approximately 24 MiB RSS and 0.7% last-window CPU, a point sample
 on one Linux desktop rather than a performance guarantee.

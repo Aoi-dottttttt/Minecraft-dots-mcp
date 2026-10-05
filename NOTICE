@@ -1,4 +1,4 @@
-Minecraft MCP Server, public modified source candidate 3.2.0-rc.2
+Minecraft MCP Server, public modified source candidate 3.2.0-rc.3
 
 Based on minecraft-mcp-server 2.0.4 by Yuniko Software.
 Upstream: https://github.com/yuniko-software/minecraft-mcp-server
@@ -33,3 +33,10 @@ provenance URLs are intentionally retained as attribution.
 
 Minecraft is a trademark of Mojang Synergies AB. This project is not affiliated
 with, endorsed by, or sponsored by Mojang or Microsoft.
+
+Optional native renderer: Godot Engine (MIT), installed separately, not vendored.
+CI pins the official 4.6.3 Linux x86_64 release ZIP to SHA-256
+ d0bc2113065e481c9c2c2b2c37daa4e8be3fe9e27f0ab9ab0b6096e9a37907f3
+Source: https://github.com/godotengine/godot-builds/releases/tag/4.6.3-stable
+The first-party native project reads only bounded JSON arrays and the already
+pinned Prismarine texture atlas; it loads no untrusted Godot project or scene.
