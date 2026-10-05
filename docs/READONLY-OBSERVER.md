@@ -11,7 +11,7 @@ node runtime/minecraft-daemon.mjs --user-started-session 25565 \
   --username ExampleBot --state-dir "$GAME_DIR" --observe-port 3100
 ```
 
-Open `http://127.0.0.1:3100/` on the same computer. `--observe-port 0` chooses a free local port; read the actual URL from `get-session-status` under `observer.url`. Without the flag, no HTTP observer is started. The flag is also accepted by the direct backend entry for offline fixtures. Existing backends are not hot-upgraded or restarted.
+Open `http://127.0.0.1:3100/` on the same computer. `--observe-port 0` chooses a free local port; read the actual URL from `get-session-status` under `observer.url`. Without the flag, no HTTP observer is started. An occupied port or observer initialization failure is reported as `observer.error: observer_start_failed`; it starts no alternative listener and does not disconnect the already-started game backend. The flag is also accepted by the direct backend entry for offline fixtures. Existing backends are not hot-upgraded or restarted.
 
 There is deliberately no bind-address, authentication, reverse-proxy or remote-publication option. The server binds only IPv4 `127.0.0.1` and checks the exact host and same-origin browser requests, including websocket upgrades and polling. `localhost` is not the advertised origin. Do not publish or forward this unauthenticated port. Trusted-local-process access is within the existing security model; this is not protection from same-user malware.
 
