@@ -2,6 +2,10 @@
 
 ## 3.1.1-rc.2: verified maintenance candidate
 
+- Allow verified movement through consistently open wooden doors using a scoped
+  first-party pathfinding adapter, retaining real collision shapes and straight
+  entry/exit only; add locked-dependency A*/physics/controller regressions
+
 - Extend one-action furnace fuel conservation to birch planks in ordinary furnaces with an exact 300-tick duration; preserve cursor, other-slot, fresh-progress and single-burn evidence requirements
 - Record session-local placement provenance for both native placement and generic block use only with an empty target, matching held block, raw block update and exact one-item server debit; expire records after block removal/replacement, dimension or chunk continuity changes
 - Propagate cancellation through equipment selection, crafting clicks and book-edit preparation; retain a fence after a submitted inventory action is cancelled
