@@ -10,7 +10,6 @@ export const WORLD_FILE_INTERVAL_MS = 2000;
 export const WORLD_FILE_MAX_BYTES = 256 * 1024;
 export const WORLD_FILE_CELL_COUNT = 17 * 13 * 17;
 const VALID_FOR_MS = 5000;
-const FILE_NAME = 'world-frame.json';
 type Point = { x: number; y: number; z: number };
 type Scalar = number | null;
 export type WorldFileReason = 'starting' | 'observed' | 'respawn' | 'death' | 'disconnected' | 'closed' | 'invalid-observation';
@@ -73,21 +72,22 @@ async function inspectPrivate(path: string, directory: boolean): Promise<void> {
   if ((value.mode & 0o077) !== 0 || (typeof process.getuid === 'function' && value.uid !== process.getuid())) throw Error('World output permissions/owner are not private');
 }
 
-async function makeWriter(directoryInput: string): Promise<{ path: string; write(frame: WorldFileFrame, current: () => boolean): Promise<boolean> }> {
+export async function createPrivateWorldWriter(directoryInput: string, options: { name: 'world-frame.json' | 'mesh-frame.json'; maxBytes: number } = { name: 'world-frame.json', maxBytes: WORLD_FILE_MAX_BYTES }): Promise<{ path: string; write(frame: object, current: () => boolean): Promise<boolean> }> {
+  if (!['world-frame.json', 'mesh-frame.json'].includes(options.name) || !Number.isSafeInteger(options.maxBytes) || options.maxBytes < 1 || options.maxBytes > 16 * 1024 * 1024) throw Error('Invalid bounded world output contract');
   if (!isAbsolute(directoryInput)) throw Error('World output directory must be absolute');
   const directory = resolve(directoryInput);
   if (directory === parse(directory).root) throw Error('World output requires a dedicated private directory');
   await inspectDirectoryPath(directory);
   await mkdir(directory, { recursive: true, mode: 0o700 });
   await inspectDirectoryPath(directory); await inspectPrivate(directory, true);
-  const path = join(directory, FILE_NAME);
+  const path = join(directory, options.name);
   const destination = async (): Promise<void> => {
     try { await inspectPrivate(path, false); } catch (error) { if (errno(error) !== 'ENOENT') throw error; }
   };
   await destination();
   return { path, async write(frame, current) {
     const content = Buffer.from(JSON.stringify(frame) + '\n');
-    if (content.length > WORLD_FILE_MAX_BYTES) throw Error('World observation exceeds the bounded file size');
+    if (content.length > options.maxBytes) throw Error('World observation exceeds the bounded file size');
     if (!current()) return false;
     await inspectDirectoryPath(directory); await inspectPrivate(directory, true); await destination();
     const temporary = join(directory, `.world-frame-${randomUUID()}.tmp`);
@@ -127,7 +127,7 @@ export interface WorldFileExporter {
  */
 export async function createWorldFileExporter(bot: Bot, options: { directory: string; initiallyReady?: boolean }): Promise<WorldFileExporter> {
   if (bot.version !== '1.21.1') throw Error('World-file prototype supports only Minecraft Java 1.21.1');
-  const writer = await makeWriter(options.directory);
+  const writer = await createPrivateWorldWriter(options.directory);
   let generation = 0, sequence = 0, ready = options.initiallyReady === true, closed = false, ended = false;
   let busy = false, lastCapture = -Infinity, error: 'world-file-write-failed' | null = null;
   let lastWrite: Promise<boolean> = Promise.resolve(false);

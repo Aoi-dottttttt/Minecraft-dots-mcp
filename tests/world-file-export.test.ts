@@ -76,7 +76,7 @@ test.serial('world file: startup waits for spawn; 2-second cadence and generatio
   f.bot.blockAt = ((...args: Parameters<Bot['blockAt']>) => ({ ...oldRead(...args), stateId: newState })) as Bot['blockAt'];
   f.bot.emit('spawn'); await exporter.flush();
   t.is(JSON.parse(await readFile(exporter.path, 'utf8')).status, 'stale', 'New spawn cannot bypass sampling cadence');
-  await new Promise(resolve => setTimeout(resolve, 2100)); await exporter.flush();
+  await new Promise(resolve => setTimeout(resolve, 2100)); await exporter.sample(); await exporter.flush();
   const fresh = JSON.parse(await readFile(exporter.path, 'utf8'));
   t.is(fresh.status, 'live'); t.is(fresh.generation, stale.generation); t.true(fresh.volume.stateIds.every((id: number) => id === newState));
 });
