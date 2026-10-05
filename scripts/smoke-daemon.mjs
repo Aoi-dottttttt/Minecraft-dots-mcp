@@ -340,16 +340,37 @@ async function uncertaintyAndDisconnect() {
   const args = { inventorySlot: 9, destination: 'hand', timeoutMs: 1200 };
   const unresolved = old.call('equip-inventory-slot', args, requestId, 'stale-response'); unresolved.catch(() => {});
   await until(() => fixture.packets.some(packet => packet.name === 'window_click'), 'real server equipment click');
+  const beforeDetach = gameStatus(await observer.okay('status')).position;
+  const packetsBeforeDetach = fixture.packets.length;
   old.destroy(); await waitDetached(observer);
   const next = await peer(dir); await next.okay('attach', { frontendVersion: version });
   const blocked = await next.call('move-controls', { controls: { forward: true }, durationMs: 100 }, randomUUID());
-  assert.equal(blocked.ok, false, 'New controller must not mutate while detached work is unresolved');
+  // Cancellation may settle equipment before this new controller gets a turn.
+  // Unresolved work rejects at IPC; settled cancellation rejects through the
+  // backend inventory fence inside a successful IPC transport envelope. Neither
+  // outcome permits the movement executor to run; arbitrary tool errors do not
+  // count as evidence of the safety fence.
+  if (blocked.ok === false) {
+    assert.ok(['FENCED', 'ACTION_BUSY'].includes(blocked.error?.code), 'Unresolved detached work must reject at the daemon action gate');
+  } else {
+    assert.equal(blocked.ok, true);
+    assert.equal(blocked.result?.isError, true, 'Settled cancellation must still reject the mutation');
+    assert.match(toolText(blocked.result), /^Failed: Inventory safety lock:/, 'Backend rejection must preserve the equipment uncertainty fence');
+  }
   const collision = await next.request('status', {}, 'stale-response');
   assert.equal(collision.ok, true); assert.equal(collision.result.sessionId, initial.sessionId);
   await until(async () => gameStatus(await observer.okay('status'))?.inventoryAuthority?.fence, 'backend inventory uncertainty fence');
   await sleep(150);
   assert.equal(next.messages.filter(message => message.id === 'stale-response').length, 1, 'Old controller response must not leak into new controller with colliding transport ID');
   const fenced = await observer.okay('status'); const fence = gameStatus(fenced).inventoryAuthority.fence;
+  const afterDetach = gameStatus(fenced).position;
+  assert.ok(Math.hypot(afterDetach.x - beforeDetach.x, afterDetach.z - beforeDetach.z) < 0.01, 'Rejected movement must not move the player');
+  for (const { name, packet } of fixture.packets.slice(packetsBeforeDetach)) {
+    if (name === 'position' || name === 'position_look') {
+      assert.ok(Math.hypot(packet.x - beforeDetach.x, packet.z - beforeDetach.z) < 0.01, 'Rejected movement must not issue displaced game positions');
+    }
+  }
+  assert.equal(fixture.packets.filter(packet => packet.name === 'window_click').length, 1, 'Cancellation must not issue another inventory click');
   assertSameGame(fixture, initial, fenced);
   const clicks = fixture.packets.filter(packet => packet.name === 'window_click').length;
   const duplicate = await next.call('equip-inventory-slot', args, requestId);
@@ -358,9 +379,21 @@ async function uncertaintyAndDisconnect() {
   await next.okay('detach'); await waitDetached(observer);
   const third = await peer(dir); await third.okay('attach', { frontendVersion: version });
   assert.equal(gameStatus(await observer.okay('status')).inventoryAuthority.fence, fence, 'Controller reattachment must preserve the existing backend inventory safety fence');
+  await until(async () => {
+    const status = await observer.okay('status');
+    return !status.detachFence && !status.activeRequest && !gameStatus(status).controlFence;
+  }, 'detach cleanup settled with the inventory fence retained');
+  const settledMutation = await third.call('move-controls', { controls: { forward: true }, durationMs: 100 });
+  assert.equal(settledMutation.ok, true, 'After cleanup, IPC must return the backend fence result');
+  assert.equal(settledMutation.result?.isError, true, 'A cleared detach barrier must not clear the inventory fence');
+  assert.match(toolText(settledMutation.result), /^Failed: Inventory safety lock:/);
+  assert.equal(gameStatus(await observer.okay('status')).inventoryAuthority.fence, fence);
   const freshMutation = await third.call('equip-inventory-slot', args);
   assert.ok(freshMutation.ok === false || freshMutation.result?.isError === true);
   assert.equal(fixture.packets.filter(packet => packet.name === 'window_click').length, clicks);
+  const stillFenced = gameStatus(await observer.okay('status'));
+  assert.equal(stillFenced.inventoryAuthority.fence, fence);
+  assert.ok(Math.hypot(stillFenced.position.x - beforeDetach.x, stillFenced.position.z - beforeDetach.z) < 0.01, 'Neither controller may move through the persistent inventory fence');
   check('detach fences unresolved mutation, isolates stale responses, preserves inventory safety lock, and forbids replay');
   fixture.client.end('synthetic real game disconnect');
   await until(async () => {
