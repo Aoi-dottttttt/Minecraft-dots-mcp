@@ -9,6 +9,7 @@ import type { BotConnection } from '../src/bot-connection.js';
 import { ToolFactory } from '../src/tool-factory.js';
 import { registerCompleteControls } from '../src/complete-controls.js';
 import { registerPositionTools } from '../src/tools/position-tools.js';
+import { installOxygenAuthority } from '../src/oxygen-authority.js';
 import { inventoryFixture } from './helpers/inventory-fixture.js';
 import { constrainMovements, inspectMovementSafety, surfaceFromWater, waitForDryMovement } from '../src/movement-safety.js';
 import { moveAndVerify } from '../src/tools/movement-utils.js';
@@ -36,7 +37,10 @@ function fixture() {
     clearControlStates: () => { for (const key of Object.keys(controls)) controls[key] = false; },
     pathfinder: { setGoal: () => {}, movements: undefined }
   });
-  return { ...f, controls, dry: () => { waterTop = 60; Object.assign(f.bot.entity, { isInWater: false }); f.bot.oxygenLevel = 20; }, ceiling: () => { ceiling = true; }, unload: () => { loaded = false; }, deepen: () => { waterTop = 75; } };
+  const oxygenAuthority = installOxygenAuthority(f.bot);
+  const setAir = (value: number, entityId = f.bot.entity.id) => f.bot._client.emit('entity_metadata', { entityId, metadata: [{ key: 1, type: 'int', value }] });
+  setAir(120);
+  return { ...f, controls, setAir, oxygenAuthority, dry: () => { waterTop = 60; Object.assign(f.bot.entity, { isInWater: false }); setAir(300); }, ceiling: () => { ceiling = true; }, unload: () => { loaded = false; }, deepen: () => { waterTop = 75; } };
 }
 
 test('dry policy preserves exclusions and tightens plugin movement profiles', t => {
@@ -78,7 +82,7 @@ test('low oxygen cancels goto immediately and retains its lane until settlement'
   const movement = moveAndVerify(f.bot, { isEnd: () => false } as never, 1000).finally(() => { settled = true; });
   const assertion = t.throwsAsync(movement, { message: /oxygen/i });
   await Promise.resolve();
-  f.bot.oxygenLevel = 5; f.bot.emit('breath');
+  f.setAir(75);
   await new Promise(resolve => setImmediate(resolve));
   t.true(stopped); t.false(settled);
   settlePath(); await assertion;
@@ -90,13 +94,43 @@ test('explicit surfacing needs new breath evidence, always releases controls', a
   const action = surfaceFromWater(f.bot, { timeoutMs: 100 });
   t.true(f.controls.jump);
   f.bot.entity.position.y = 66;
-  f.bot.oxygenLevel = 20;
   f.bot.emit('physicsTick');
-  f.bot.emit('breath');
+  f.setAir(300);
   const result = await action;
   t.true(result.confirmed); t.false(f.controls.jump);
   t.false(result.dryLandConfirmed);
   t.is(f.bot.listenerCount('breath'), 0);
+});
+
+for (const otherAir of [300, 4680]) test(`another entity air ${otherAir} cannot confirm surfacing, even with an air head position`, async t => {
+  const f = fixture(); const startRevision = f.oxygenAuthority.snapshot().revision;
+  const action = surfaceFromWater(f.bot, { timeoutMs: 5 });
+  f.bot.entity.position.y = 66;
+  // Reproduce the pinned native cache write and unattributed event as well as
+  // the raw other-entity packet; neither is own-player evidence.
+  f.bot.oxygenLevel = Math.round(otherAir / 15); f.bot.emit('breath');
+  f.setAir(otherAir, 42); f.bot.emit('physicsTick');
+  const result = await action;
+  t.false(result.confirmed); t.is(result.oxygen, 8);
+  t.is(result.oxygenEvidence.revision, startRevision);
+  t.false(f.controls.jump); t.is(f.oxygenAuthority.listenerCount('change'), 0);
+});
+
+test('own full-air sample before surfacing is not fresh confirmation', async t => {
+  const f = fixture(); f.setAir(300);
+  const before = f.oxygenAuthority.snapshot().revision;
+  const action = surfaceFromWater(f.bot, { timeoutMs: 5 });
+  f.bot.entity.position.y = 66; f.bot.emit('physicsTick'); f.bot.emit('breath');
+  const result = await action;
+  t.false(result.confirmed); t.is(result.oxygenEvidence.revision, before);
+  t.is(result.oxygen, 20); t.false(f.controls.jump);
+});
+
+test('a fresh own full-air sample followed by own low-air correction cannot remain successful', async t => {
+  const f = fixture(); const action = surfaceFromWater(f.bot, { timeoutMs: 30 });
+  f.bot.entity.position.y = 66; f.setAir(300); f.setAir(75);
+  const result = await action;
+  t.false(result.confirmed); t.is(result.oxygen, 5); t.false(f.controls.jump);
 });
 
 test('surfacing rejects unknown, blocked and too-deep columns before control', async t => {
@@ -123,7 +157,7 @@ test('surfacing cancellation releases controls and does not resume navigation', 
   const assertion = t.throwsAsync(action, { message: /cancel/i });
   controller.abort(); await assertion;
   t.false(f.controls.jump); t.is(goals, 1);
-  t.is(f.bot.listenerCount('death'), 1, 'inventory authority keeps its own death listener');
+  t.is(f.bot.listenerCount('death'), 2, 'inventory and oxygen authorities keep their lifecycle listeners');
 });
 
 test('read-only safety inspection reports unknown oxygen and no unproven escape', t => {

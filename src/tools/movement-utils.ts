@@ -3,6 +3,7 @@ import type { Bot } from 'mineflayer';
 import type { goals } from 'mineflayer-pathfinder';
 import { allowOpenWoodenDoors } from './open-door-navigation.js';
 import { navigationHazard, useDryLandMovements } from '../movement-safety.js';
+import { getOxygenAuthority } from '../oxygen-authority.js';
 
 export const DEFAULT_MOVE_TIMEOUT_MS = 15000;
 export const MAX_MOVE_TIMEOUT_MS = 60000;
@@ -26,7 +27,8 @@ export async function moveAndVerify(bot: Bot, goal: goals.Goal, timeoutMs = DEFA
   const check = () => { try { const hazard = navigationHazard(bot); if (hazard) fail(hazard); } catch { fail('Navigation observations became unavailable; controls stopped'); } };
   const ended = () => fail('Session ended or player died during navigation');
   const abort = () => fail('Navigation cancelled');
-  bot.on('breath', check); bot.on('physicsTick', check); bot.on('death', ended); bot.on('end', ended);
+  const oxygen = getOxygenAuthority(bot);
+  oxygen?.on('change', check); bot.on('physicsTick', check); bot.on('death', ended); bot.on('end', ended);
   options.signal?.addEventListener('abort', abort, { once: true });
   const movement = Promise.resolve().then(() => { options.signal?.throwIfAborted(); if (safetyFailure) throw safetyFailure; return bot.pathfinder.goto(goal); });
   const timeout = new Promise<never>((_, reject) => {
@@ -55,7 +57,7 @@ export async function moveAndVerify(bot: Bot, goal: goals.Goal, timeoutMs = DEFA
     throw error;
   } finally {
     if (timer) clearTimeout(timer);
-    bot.removeListener('breath', check); bot.removeListener('physicsTick', check);
+    oxygen?.removeListener('change', check); bot.removeListener('physicsTick', check);
     bot.removeListener('death', ended); bot.removeListener('end', ended);
     options.signal?.removeEventListener('abort', abort);
     restoreMovements();

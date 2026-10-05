@@ -20,6 +20,7 @@ import {openVillagerVerified,tradeWithVillagerVerified,enchantItemVerified,anvil
 import { registerInteractionTools } from './tools/interaction-tools.js';
 import { registerWindowTools } from './tools/window-tools.js';
 import { readBookVerified, readBookSchema } from './book-observation.js';
+import { installOxygenAuthority } from './oxygen-authority.js';
 import { registerWorkflowTools } from './tools/workflow-tools.js';
 import { constrainMovements, navigationHazard, waitForDryMovement } from './movement-safety.js';
 import { moveAndVerify } from './tools/movement-utils.js';
@@ -42,6 +43,7 @@ export async function registerCompleteControls(options:Options):Promise<{names:s
   const {bot,factory,server}=options;
   const raw = bot as any;
   const authority=getInventoryAuthority(bot);
+  installOxygenAuthority(bot);
   interactions.installVehicleStateGuard(bot);
   const upstreamRequire=createRequire(new URL('../vendor/awesome-mineflayer-mcp/package.json',import.meta.url));
   const z4=(await import(upstreamRequire.resolve('zod'))).z;

@@ -2,6 +2,7 @@ import type { Bot } from 'mineflayer';
 import type { Block } from 'prismarine-block';
 import { Vec3 } from 'vec3';
 import { getInventoryAuthority } from './inventory-authority.js';
+import { getOxygenAuthority, installOxygenAuthority, readOxygenEvidence, type OxygenEvidence } from './oxygen-authority.js';
 
 // Reuse the locked pathfinder/physics implementations. This policy deliberately
 // does not turn their liquid movement support into an autonomous swimming claim.
@@ -54,7 +55,8 @@ function wet(block: Block | null): boolean {
 /** Stops a dry route on unexpected water/low air; it never resumes or retries it. */
 export function navigationHazard(bot: Bot): string | null {
   if (Number.isFinite(bot.health) && bot.health <= 0) return 'Player died during navigation';
-  if (Number.isFinite(bot.oxygenLevel) && bot.oxygenLevel <= 10) return 'Low oxygen: navigation stopped; inspect the water and use surface-from-water for a bounded vertical escape';
+  const oxygen = readOxygenEvidence(bot).oxygen;
+  if (oxygen !== null && oxygen <= 10) return 'Low oxygen: navigation stopped; inspect the water and use surface-from-water for a bounded vertical escape';
   const p = bot.entity?.position;
   if ((bot.entity as typeof bot.entity & { isInWater?: boolean })?.isInWater || (p && typeof bot.blockAt === 'function' &&
     (wet(bot.blockAt(p, false)) || wet(bot.blockAt(p.offset(0, 1.62, 0), false))))) {
@@ -66,11 +68,12 @@ export function navigationHazard(bot: Bot): string | null {
 /** Bounded dynamic pathfinder goals use the same hazards as blocking goto. */
 export function waitForDryMovement(bot: Bot, durationMs: number, signal?: AbortSignal): Promise<void> {
   if (!Number.isInteger(durationMs) || durationMs < 1 || durationMs > 30000) throw new Error('Dynamic movement duration must be 1..30000ms');
+  const oxygen = getOxygenAuthority(bot);
   return new Promise((resolve, reject) => {
     let settled = false;
     const finish = (error?: Error) => {
       if (settled) return; settled = true;
-      clearTimeout(timer); bot.removeListener('breath', check); bot.removeListener('physicsTick', check);
+      clearTimeout(timer); oxygen?.removeListener('change', check); bot.removeListener('physicsTick', check);
       bot.removeListener('end', ended); bot.removeListener('death', ended); signal?.removeEventListener('abort', abort);
       if (error) reject(error); else resolve();
     };
@@ -81,7 +84,7 @@ export function waitForDryMovement(bot: Bot, durationMs: number, signal?: AbortS
     const ended = () => finish(new Error('Session ended or player died during navigation'));
     const abort = () => finish(new Error('Navigation cancelled'));
     const timer = setTimeout(() => finish(), durationMs);
-    bot.on('breath', check); bot.on('physicsTick', check); bot.on('end', ended); bot.on('death', ended);
+    oxygen?.on('change', check); bot.on('physicsTick', check); bot.on('end', ended); bot.on('death', ended);
     signal?.addEventListener('abort', abort, { once: true });
     if (signal?.aborted) abort(); else check();
   });
@@ -128,22 +131,23 @@ function surfaceColumn(bot: Bot, maximumRise: number): SurfaceColumn {
 }
 
 export function inspectMovementSafety(bot: Bot): {
-  oxygen: number | null; navigationPolicy: 'dry_land_only'; navigationHazard: string | null;
+  oxygen: number | null; oxygenEvidence: OxygenEvidence; navigationPolicy: 'dry_land_only'; navigationHazard: string | null;
   inWater: boolean; surfaceColumn: SurfaceColumn; liveValidated: false;
 } {
   return {
-    oxygen: Number.isFinite(bot.oxygenLevel) ? bot.oxygenLevel : null,
+    oxygen: readOxygenEvidence(bot).oxygen, oxygenEvidence: readOxygenEvidence(bot),
     navigationPolicy: 'dry_land_only', navigationHazard: navigationHazard(bot),
     inWater: !!(bot.entity as typeof bot.entity & { isInWater?: boolean })?.isInWater, surfaceColumn: surfaceColumn(bot, 6), liveValidated: false
   };
 }
 
 /** An explicit single-lane escape attempt, not a background rescue or shore plan.
- * Fresh Mineflayer breath events come from own-entity server air_supply metadata.
+ * Only fresh own-player raw metadata revisions can confirm air; the pinned
+ * native breath event is unattributed and can originate from another entity.
  * Local physics position alone is never sufficient to confirm oxygen recovery. */
 export async function surfaceFromWater(bot: Bot, options: { timeoutMs?: number; maxRise?: number; signal?: AbortSignal } = {}): Promise<{
   requestIssued: boolean; confirmed: boolean; evidence: string[]; detail: string;
-  oxygen: number | null; controlsReleased: true; dryLandConfirmed: false; automaticRetry: false;
+  oxygen: number | null; oxygenEvidence: OxygenEvidence; controlsReleased: true; dryLandConfirmed: false; automaticRetry: false;
 }> {
   const timeoutMs = options.timeoutMs ?? 5000;
   const maxRise = options.maxRise ?? 6;
@@ -151,6 +155,7 @@ export async function surfaceFromWater(bot: Bot, options: { timeoutMs?: number; 
   if (!Number.isInteger(maxRise) || maxRise < 1 || maxRise > 8) throw new Error('Surfacing maxRise must be 1..8');
   options.signal?.throwIfAborted();
   const authority = getInventoryAuthority(bot);
+  const oxygen = installOxygenAuthority(bot);
   authority.assertMutationReady();
   if (bot.currentWindow || authority.cursor) throw new Error('Close the current window and clear the cursor before surfacing');
   if ((bot as Bot & { vehicle?: unknown }).vehicle) throw new Error('Dismount deliberately before attempting a vertical water escape');
@@ -164,8 +169,8 @@ export async function surfaceFromWater(bot: Bot, options: { timeoutMs?: number; 
   }
   bot.pathfinder?.setGoal(null);
   bot.clearControlStates();
+  const oxygenRevisionBefore = oxygen.snapshot().revision;
   let issued = false;
-  let freshRecoveredBreath = false;
   let confirmed = false;
   try {
     confirmed = await new Promise<boolean>((resolve, reject) => {
@@ -173,7 +178,7 @@ export async function surfaceFromWater(bot: Bot, options: { timeoutMs?: number; 
       const finish = (value: boolean, error?: Error) => {
         if (settled) return; settled = true;
         clearTimeout(timer);
-        bot.removeListener('breath', breath); bot.removeListener('physicsTick', check);
+        oxygen.removeListener('change', check); bot.removeListener('physicsTick', check);
         bot.removeListener('death', ended); bot.removeListener('end', ended);
         options.signal?.removeEventListener('abort', abort);
         if (error) reject(error); else resolve(value);
@@ -191,25 +196,31 @@ export async function surfaceFromWater(bot: Bot, options: { timeoutMs?: number; 
           const headInAir = !!head && air.has(head.name);
           if (headInAir) bot.setControlState('jump', false);
           else bot.setControlState('jump', true);
-          if (headInAir && freshRecoveredBreath && bot.oxygenLevel >= 19) finish(true);
+          const airEvidence = oxygen.snapshot();
+          if (headInAir && airEvidence.known && airEvidence.revision > oxygenRevisionBefore && airEvidence.oxygen !== null && airEvidence.oxygen >= 19) finish(true);
         } catch (error) { finish(false, error instanceof Error ? error : new Error(String(error))); }
       };
-      const breath = () => { freshRecoveredBreath = Number.isFinite(bot.oxygenLevel) && bot.oxygenLevel >= 19; check(); };
       const ended = () => finish(false, new Error('Session ended or player died during surfacing'));
       const abort = () => finish(false, new Error('Surfacing cancelled'));
       const timer = setTimeout(() => finish(false), timeoutMs);
-      bot.on('breath', breath); bot.on('physicsTick', check);
+      oxygen.on('change', check); bot.on('physicsTick', check);
       bot.on('death', ended); bot.on('end', ended);
       options.signal?.addEventListener('abort', abort, { once: true });
       issued = true;
       check();
     });
   } finally { bot.clearControlStates(); }
+  options.signal?.throwIfAborted();
+  authority.assertMutationReady();
+  const finalAir = oxygen.snapshot();
+  // A second own correction can arrive before this await resumes. Do not retain
+  // a transient full-air success after the authoritative sample is invalid/low.
+  confirmed = confirmed && finalAir.known && finalAir.revision > oxygenRevisionBefore && finalAir.oxygen !== null && finalAir.oxygen >= 19;
   return {
     requestIssued: issued, confirmed, controlsReleased: true, dryLandConfirmed: false, automaticRetry: false,
-    oxygen: Number.isFinite(bot.oxygenLevel) ? bot.oxygenLevel : null,
-    evidence: confirmed ? ['fresh server breath recovery with an observed air head position'] : [],
-    detail: confirmed ? 'Breath recovery observed; vertical controls released. Reaching dry land is not established.'
-      : 'Vertical escape stopped at its time limit without fresh breath confirmation. Inspect immediately; no route was resumed.'
+    oxygen: finalAir.oxygen, oxygenEvidence: finalAir,
+    evidence: confirmed ? ['fresh raw self-entity air metadata with an observed air head position'] : [],
+    detail: confirmed ? 'Fresh own-player air supply confirmed; vertical controls released. Reaching dry land is not established.'
+      : 'Vertical escape stopped without current fresh own-player air confirmation. Inspect immediately; no route was resumed.'
   };
 }

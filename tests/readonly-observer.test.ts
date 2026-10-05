@@ -47,6 +47,8 @@ test('observer port validates before startup, including explicit random port', t
 test('observer exposes only sanitized server inventory, never optimistic slots or arbitrary state', t => {
   const f = fixture(); const snapshot = observerSnapshot(f.bot, f.authority);
   t.is(snapshot.inventory.slots[9]?.name, 'stone'); t.is(snapshot.inventory.slots[9]?.count, 12);
+  t.is(snapshot.oxygen, null, 'an unverified native cache must not become a dashboard oxygen reading');
+  t.false(snapshot.oxygenEvidence.known);
   const text = JSON.stringify(snapshot);
   for (const secret of ['do-not-export', 'private', 'components', 'nbt', 'optimistic_fake_item', 'fixture']) t.false(text.includes(secret));
   f.authority.frames.clear(); t.false(observerSnapshot(f.bot, f.authority).inventory.ready);

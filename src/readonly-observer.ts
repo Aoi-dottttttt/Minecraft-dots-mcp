@@ -7,6 +7,7 @@ import { Server } from 'socket.io';
 import { viewerAsset } from './viewer-compatibility.js';
 import type { Bot } from 'mineflayer';
 import type { InventoryAuthority, ServerItem } from './inventory-authority.js';
+import { readOxygenEvidence } from './oxygen-authority.js';
 
 const require = createRequire(import.meta.url);
 const MAX_CLIENTS = 4;
@@ -29,7 +30,8 @@ export function observerSnapshot(bot: Bot, authority: InventoryAuthority) {
     revision: entry?.fullRevision ?? 0, slots: entry?.fullRevision ? entry.slots.slice(0, 128).map(itemSnapshot) : [],
     inventoryStart: entry?.inventoryStart ?? null, inventoryEnd: entry?.inventoryEnd ?? null });
   return { readonly: true, capturedAt: new Date().toISOString(), version: safeName(bot.version),
-    connected: !authority.ended, health: finite(bot.health), food: finite(bot.food), oxygen: finite(bot.oxygenLevel),
+    connected: !authority.ended, health: finite(bot.health), food: finite(bot.food), oxygen: readOxygenEvidence(bot).oxygen,
+    oxygenEvidence: readOxygenEvidence(bot),
     position: point(bot.entity?.position), dimension: safeName(bot.game?.dimension), time: finite(bot.time?.timeOfDay),
     inventory: window(player, 0), currentWindow: { ...window(frame, id), type: safeName(bot.currentWindow?.type ?? 'minecraft:inventory') },
     authority: { sequence: authority.sequence, cursorKnown: authority.cursorKnown, fenced: Boolean(authority.fence),
