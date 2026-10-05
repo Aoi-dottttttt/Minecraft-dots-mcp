@@ -150,7 +150,14 @@
       "offline (24)",
       "observer-browser"
     ],
-    "sourceOfTruth": "GitHub Actions results on the candidate PR head; this offline snapshot does not assert future CI success"
+    "sourceOfTruth": "GitHub Actions results on the candidate PR head; this offline snapshot does not assert future CI success",
+    "previousRun": {
+      "head": "c6771d7fde6bc1f1bf0f3ea4a4996724121a024d",
+      "url": "https://github.com/Aoi-dottttttt/Minecraft-dots-mcp/actions/runs/37288755640",
+      "offline22": "passed",
+      "offline24": "passed",
+      "observerBrowser": "failed green-grass pixel assertion; fixture now explicitly uses plains rather than default badlands; same pixel assertion retained"
+    }
   },
   "boundaries": {
     "liveServerUsed": false,
