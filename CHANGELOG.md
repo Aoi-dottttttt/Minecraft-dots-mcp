@@ -2,6 +2,10 @@
 
 ## 3.1.1-rc.2: verified maintenance candidate
 
+- Resolve missing Java 1.21.1 wool/bed dye input alternatives consistently across
+  recipe reads and verified crafting; preserve exact server inventory confirmation,
+  exclude same-color inputs, and add all 480 legal-pair / 32 same-color regressions
+
 - Verify detach cancellation across both IPC rejection and settled backend inventory-fence rejection, with no-motion and no-extra-click assertions
 - Allow verified movement through consistently open wooden doors using a scoped
   first-party pathfinding adapter, retaining real collision shapes and straight

@@ -119,6 +119,7 @@ tests/reviewer-recipes.test.ts
 tests/reviewer-window-preflight.test.ts
 tests/stdio-filter.test.ts
 tests/survival-interactions.test.ts
+tests/tagged-dye-recipes.test.ts
 tests/tool-factory.test.ts
 tests/verified-consumption.test.ts
 tests/verified-fishing.test.ts
