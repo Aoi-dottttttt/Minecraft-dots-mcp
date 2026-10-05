@@ -75,6 +75,7 @@ src/tools/gamestate-tools.ts
 src/tools/interaction-tools.ts
 src/tools/inventory-tools.ts
 src/tools/movement-utils.ts
+src/tools/open-door-navigation.ts
 src/tools/position-tools.ts
 src/tools/window-tools.ts
 src/types.d.ts
@@ -109,6 +110,7 @@ tests/mcp-integration.test.ts
 tests/message-store.test.ts
 tests/native-ore-policy.test.ts
 tests/native-plugin-startup.test.ts
+tests/open-door-navigation.test.cjs
 tests/position-tools.test.ts
 tests/review-capability-gaps.test.ts
 tests/reviewer-complete-controls.test.ts
