@@ -55,6 +55,48 @@ IPC and dependency locks are unchanged. Offline fixtures use the repository's
 locked Minecraft 1.21.1 data and actual A*/collision/controller implementations;
 they do not establish real-server acceptance of this implementation.
 
+## Native placement rotation ordering
+
+`place-block` aims at the exact center of the clicked reference face used by
+Mineflayer 4.39.0's public `placeBlock`, then waits for one native physics tick.
+A forced look changes local rotation immediately; it does not itself write the
+rotation packet. The tick's synchronous position/look write completes before
+placement resumes. In this pinned version, a zero local angle delta returns
+before the forced-look branch, so an earlier non-forced turn can still be in
+flight. Only in that case, two standard forced public look calls turn by
+0.01 radians (less than one degree) and back to the exact face before the tick.
+Both complete in microtasks without an intermediate rotation packet. The adapter
+verifies that these turns changed finite local angles and that the final aim
+rounds to zero under Mineflayer's own 0.15-degree quantizer; extreme or invalid
+poses fail closed. Cancellation between preparation steps starts no cleanup
+turn or placement. No raw movement packet, arbitrary sleep, vendor patch,
+physics-speed change or second placement attempt is introduced.
+
+After navigation and again after that tick, placement checks the bot session,
+held item/type/count and selected slot, inventory window, reference block
+identity/state, loaded empty target, player overlap, visibility and a conservative
+4.5-block eye-to-clicked-face reach limit. A disconnect/respawn, dimension change
+during aiming, or a changed player position, height, eye-height or rotation
+at the final recheck, cancels placement. This deliberately requires a stationary,
+stable pose: a moving/falling player must settle and be inspected before another explicit
+attempt. Matching the clicked point and retaining that pose ensure the public
+`placeBlock`'s internal look does not initiate a second turn after these checks.
+
+The native one-tick wait has a 5050 ms timeout. The serialized action lane stays
+occupied until preparation settles; timeout or cancellation does not leave a
+pending placement that can fire on a later tick. Server-authoritative block
+confirmation, exact one-item debit requirements for placement provenance,
+uncertainty fences and no automatic retry remain unchanged. An absent inventory
+debit cannot grant provenance even when the block effect is confirmed.
+
+The neutral offline fixture loads the actual locked physics, generic-place and
+public place-block plugins. It verifies all six clicked-face centers, rotation
+packet ordering, stalled ticks, pending non-forced turns, already-sent aim,
+invalid angle history, cancellation/stale preparation and the existing
+confirmation boundaries. It does not establish server acceptance, every
+orientation-sensitive block's placement semantics, or live bed/boat behavior.
+Tool schemas, package versions, IPC and dependency locks are unchanged.
+
 ## Change policy
 
 Schema or semantic changes require a documented compatibility decision, regression fixture and maintainer review. Breaking tool/IPC contracts require a version boundary and migration notes. Do not infer compatibility solely from matching tool names or package version. The public candidate is 3.1.1-rc.2 so it cannot be confused with the historical base.
