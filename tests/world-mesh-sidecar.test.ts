@@ -1,4 +1,6 @@
 import test from 'ava';
+import { constants, openSync, closeSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, writeFile, rm, chmod, symlink, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -87,4 +89,27 @@ test.serial('mesh files: stale source clears immediately even inside the geometr
   await writeFile(join(directory, 'world-frame.json'), JSON.stringify(input), { mode: 0o600 });
   const output = await sidecar.tick(); t.is(output.status, 'stale'); t.is(output.sourceGeneration, 2); t.deepEqual(output.sections, []);
   t.is(JSON.parse(await readFile(sidecar.path, 'utf8')).status, 'stale');
+});
+
+
+test.serial('mesh files: a FIFO source fails stale without blocking tick or close', async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'mesh-fifo-test-')); t.teardown(() => rm(directory, { recursive: true, force: true }));
+  const sidecar = await createMeshFileSidecar(directory); t.teardown(() => sidecar.close());
+  const source = join(directory, 'world-frame.json');
+  execFileSync('mkfifo', ['-m', '600', source]);
+  let rescuedBlockedOpen = false;
+  // Rescue the pre-fix blocking reader so the failing regression itself never
+  // strands a libuv thread or its teardown. This writer sends no frame data.
+  const rescue = setTimeout(() => {
+    rescuedBlockedOpen = true;
+    const fd = openSync(source, constants.O_WRONLY | constants.O_NONBLOCK);
+    closeSync(fd);
+  }, 1000);
+  try {
+    const result = await sidecar.tick();
+    await sidecar.close();
+    t.false(rescuedBlockedOpen, 'Non-regular source must be rejected before waiting for a FIFO writer');
+    t.is(result.status, 'stale'); t.is(result.reason, 'source-unavailable'); t.deepEqual(result.sections, []);
+    t.is(JSON.parse(await readFile(sidecar.path, 'utf8')).reason, 'closed');
+  } finally { clearTimeout(rescue); }
 });

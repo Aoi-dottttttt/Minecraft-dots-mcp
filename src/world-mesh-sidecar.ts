@@ -156,7 +156,8 @@ export function makeMeshFrame(input: unknown, worker: OfficialMeshWorker): MeshF
 }
 
 async function readSource(path: string): Promise<unknown> {
-  const handle = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+  // Reject FIFOs via fstat without first blocking in open waiting for a writer.
+  const handle = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
   try {
     const info = await handle.stat();
     if (!info.isFile() || (info.mode & 0o077) !== 0 || (process.getuid && info.uid !== process.getuid()) || info.size > WORLD_FILE_MAX_BYTES) throw Error('Unsafe world source');
