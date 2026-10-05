@@ -2,6 +2,7 @@
 import { z } from "zod";
 import mineflayer from 'mineflayer';
 import minecraftData from 'minecraft-data';
+import type { Recipe } from 'prismarine-recipe';
 import { ToolFactory } from '../tool-factory.js';
 import { craftVerified, type VerifiedRecipe } from '../verified-crafting.js';
 import { getInventoryAuthority } from '../inventory-authority.js';
@@ -255,6 +256,58 @@ function canCraftRecipe(recipe: unknown, inventory: InventoryItem[], itemsById: 
   return evaluateRecipeMissing(recipe, inventory, itemsById).canCraft;
 }
 
+// Mojang Java 1.21.1 dye_<color>_{wool,bed} recipes enumerate exactly the
+// other 15 colors, not the full wool/beds tags (same-color input is illegal).
+// minecraft-data 3.117.0 keeps only the first alternative. Keep this repair
+// version/family bounded; never execute arbitrary raw recipes.
+const DYE_COLORS = ['black', 'blue', 'brown', 'cyan', 'gray', 'green', 'light_blue',
+  'light_gray', 'lime', 'magenta', 'orange', 'pink', 'purple', 'red', 'yellow', 'white'] as const;
+
+function resolvedDyeAlternatives(bot: mineflayer.Bot, mcData: unknown, query?: string): Recipe[] {
+  if (bot.version !== '1.21.1' || typeof bot.recipesAll !== 'function') return [];
+  const items = (mcData as { itemsByName?: Record<string, { id: number }> }).itemsByName;
+  if (!items) return [];
+  const alternatives: Recipe[] = [];
+  for (const family of ['wool', 'bed']) {
+    for (const color of DYE_COLORS) {
+      const output = `${color}_${family}`;
+      if (query && !classifyNameMatch(output, query).partial) continue;
+      const resultId = items[output]?.id;
+      const dyeId = items[`${color}_dye`]?.id;
+      const sourceIds = DYE_COLORS.filter(source => source !== color)
+        .map(source => items[`${source}_${family}`]?.id);
+      if (![resultId, dyeId, ...sourceIds].every(id => Number.isSafeInteger(id) && id > 0)) continue;
+      // recipesAll resolves through the installed prismarine-recipe class without
+      // requiring the representative input. Do not change the global registry,
+      // recipesFor, inventories, or the returned template in place.
+      const templates = bot.recipesAll(resultId, null, null);
+      const template = templates.find(recipe => {
+        if (recipe?.constructor?.name !== 'Recipe' || recipe.inShape !== null || recipe.outShape !== null ||
+          recipe.requiresTable !== false || recipe.result?.id !== resultId || recipe.result.count !== 1 ||
+          recipe.result.metadata != null || !Array.isArray(recipe.ingredients) || recipe.ingredients.length !== 2 ||
+          !Array.isArray(recipe.delta) || recipe.delta.length !== 3) return false;
+        const [dye, source] = recipe.ingredients;
+        return dye.id === dyeId && dye.count === -1 && dye.metadata == null &&
+          sourceIds.includes(source.id) && source.count === -1 && source.metadata == null &&
+          recipe.delta.every(delta => delta.metadata == null &&
+            ((delta.id === dyeId && delta.count === -1) ||
+             (delta.id === source.id && delta.count === -1) ||
+             (delta.id === resultId && delta.count === 1))) &&
+          new Set(recipe.delta.map(delta => delta.id)).size === 3;
+      });
+      if (!template) continue; // Unknown/respecified recipes fail closed.
+      const ResolvedRecipe = template.constructor as new (recipe: object) => Recipe;
+      for (const sourceId of sourceIds) {
+        if (sourceId === template.ingredients[1].id) continue; // already in recipesFor/raw descriptions
+        // Only this verified two-input vanilla recipe enters the real constructor.
+        // It resolves RecipeItems, delta, null shapes and requiresTable itself.
+        alternatives.push(new ResolvedRecipe({ ingredients: [dyeId, sourceId], result: { id: resultId, count: 1 } }));
+      }
+    }
+  }
+  return alternatives;
+}
+
 function collectCandidateRecipesFromBot(
   bot: mineflayer.Bot,
   mcData: unknown,
@@ -270,10 +323,13 @@ function collectCandidateRecipesFromBot(
   const exact: CandidateRecipe[] = [];
   const partial: CandidateRecipe[] = [];
 
+  const dyeAlternatives = resolvedDyeAlternatives(bot, mcData, query);
+  const inventory = bot.inventory.items().map(item => ({ name: item.name, count: item.count }));
   const pushRecipesFor = (name: string, id: number, exactMatch: boolean) => {
     const recipesFor = (bot as unknown as { recipesFor?: (...args: unknown[]) => unknown[] }).recipesFor;
     if (typeof recipesFor !== 'function') return;
-    const recipes = recipesFor(id, null, 1, craftingTable) as unknown[];
+    const recipes = [...recipesFor(id, null, 1, craftingTable) as unknown[],
+      ...dyeAlternatives.filter(recipe => recipe.result.id === id && canCraftRecipe(recipe, inventory, itemsById))];
     for (const recipe of recipes) {
       const result = getRecipeResult(recipe, itemsById);
       const resultName = result?.name ?? name;
@@ -348,7 +404,7 @@ export function registerCraftingTools(factory: ToolFactory, getBot: () => minefl
       const bot = getBot();
       const mcData = minecraftData(bot.version);
       const itemsById = (mcData as unknown as { items: McDataItemsById }).items;
-      const recipes = getAllRecipes(mcData);
+      const recipes = [...getAllRecipes(mcData), ...resolvedDyeAlternatives(bot, mcData)];
       const inventory = bot.inventory.items().map(item => ({ name: item.name, count: item.count }));
 
       if (!recipes || recipes.length === 0) {
@@ -434,6 +490,8 @@ export function registerCraftingTools(factory: ToolFactory, getBot: () => minefl
         const names = new Set(candidates.map(c => c.resultName));
         if (names.size > 1) return factory.createErrorResponse(`Ambiguous item '${outputItem}': use an exact name (${[...names].slice(0, 8).join(', ')})`);
         if (!candidates.length) return factory.createErrorResponse(`No craftable resolved recipe for ${outputItem} with available ingredients and an in-reach table. Confirmed ${craftedCount}/${amount} craft(s), ${itemCount} output item(s).`);
+        // Only resolved recipesFor/vanilla dye alternatives reach the existing
+        // authoritative click path. Raw minecraft-data remains read-only.
         const candidate = candidates[0];
         resolvedName = candidate.resultName;
         try {
@@ -459,7 +517,7 @@ export function registerCraftingTools(factory: ToolFactory, getBot: () => minefl
       const bot = getBot();
       const mcData = minecraftData(bot.version);
       const itemsById = (mcData as unknown as { items: McDataItemsById }).items;
-      const recipes = getAllRecipes(mcData);
+      const recipes = [...getAllRecipes(mcData), ...resolvedDyeAlternatives(bot, mcData)];
       const inventory = bot.inventory.items().map(item => ({ name: item.name, count: item.count }));
 
       if (!recipes || recipes.length === 0) {
@@ -519,7 +577,7 @@ export function registerCraftingTools(factory: ToolFactory, getBot: () => minefl
       const bot = getBot();
       const mcData = minecraftData(bot.version);
       const itemsById = (mcData as unknown as { items: McDataItemsById }).items;
-      const recipes = getAllRecipes(mcData);
+      const recipes = [...getAllRecipes(mcData), ...resolvedDyeAlternatives(bot, mcData)];
       const inventory = bot.inventory.items().map(item => ({ name: item.name, count: item.count }));
 
       if (!recipes || recipes.length === 0) {
