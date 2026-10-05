@@ -77,3 +77,66 @@ oversized output or source/renderer errors produce empty stale geometry. The
 model/texture source remains the official Prismarine package, not fabricated
 placeholder cubes. Minecraft screenshots and live-server acceptance are not
 claimed by these synthetic tests.
+
+## Godot native consumer prototype
+
+An installed Godot 4.6-compatible executable is required. This branch does not
+install software, expose a network service or activate the backend exporter.
+Use the supported Python entry, not a browser or a direct untrusted-file engine
+argument:
+
+```sh
+python3 scripts/native3d-launch.py --directory /absolute/private/world-observer
+```
+
+The launcher reads regular private input files using `O_NOFOLLOW|O_NONBLOCK`,
+checks ownership/mode/type/size, and atomically relays bytes into a new private
+run directory. A FIFO/device/symlink, missing file or other read error yields a
+stale marker instead of blocking the renderer's expiry clock. The original
+`validUntil` is never renewed. The launcher owns only its Godot child. Its status
+and resource reports use exclusive temporary files and atomic replacement;
+existing unsafe report destinations reject rather than follow links.
+
+The native scene retains the upstream positions, normals, colours, texture UVs
+and indexed topology. It displays a cyan position marker, an amber crop boundary
+and a magenta unknown-cell mask. Mouse dragging and wheel scrolling operate only
+the local camera. A black stale overlay clears all meshes on invalid/expired
+input or generation regression. Vertex/attribute lengths, indices, section-grid
+centres and world-space bounds are checked before GPU submission. At most 0.5
+block of model overhang is accepted outside the sampled box; larger models reject
+rather than expand the observed world. This does not certify all block models.
+
+The consumer targets 15 fps while live and 2 fps while stale. World sampling and
+meshing remain capped at one update per two seconds. No characters, entities,
+private item text, server chat, lighting shaders, native-client screenshots or
+complete-world visibility are claimed. Cropped edges may expose cutaway faces.
+
+### Neutral verification
+
+- 18 TypeScript exporter/mesh fixtures, including real FIFO rejection and close
+- 9 Python relay fixtures: preserved lease, unknown/error clear, nonblocking
+  FIFO, symlink target preservation, bounds/mode checks and atomic outputs
+- 15 Godot headless validation fixtures: JSON numeric types, expiry, fixed crop,
+  unknown mask, geometry attributes/indices and out-of-crop vertex rejection
+- Native Linux pixel inspection over the synthetic fixture confirmed official
+  textures, changing geometry, local camera orbit, unknown/crop indicators, and
+  the cleared stale overlay after the producer stopped
+
+```sh
+python3 scripts/test-native3d-relay.py
+godot --headless --path runtime/native3d --script res://validate-fixture.gd
+node scripts/native3d-fixture.mjs --directory /absolute/private/fixture --seconds 60
+# In a second terminal while that neutral fixture is running:
+python3 scripts/native3d-launch.py --directory /absolute/private/fixture --synthetic-fixture
+```
+
+Synthetic fixtures are clearly marked in the native window and never connect to
+Minecraft. On one Mesa llvmpipe software-rendered Linux desktop, a 15-fps trial
+observed 14–15 fps after startup, about 247 MiB peak Godot RSS and 46.65 CPU seconds
+over 63.26 seconds including the final stale screen. A separate 80-second meshing
+trial generated 40 approximately 5,100-vertex frames, averaged 208 ms/mesh,
+peaked at 384 ms/mesh, used about 380 MiB RSS and 9.85 CPU seconds. These are
+observed fixture measurements, not performance guarantees or live acceptance.
+The subsequent 2-fps stale mode is a conservative idle cap, not separately
+benchmarked here. The combined native reconstruction is heavier than the Tk
+status window and remains an isolated, unshipped prototype.
