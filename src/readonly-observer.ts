@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { Server } from 'socket.io';
+import { viewerAsset } from './viewer-compatibility.js';
 import type { Bot } from 'mineflayer';
 import type { InventoryAuthority, ServerItem } from './inventory-authority.js';
 
@@ -55,8 +56,10 @@ export async function startReadonlyObserver(bot: Bot, authority: InventoryAuthor
   const { WorldView } = require('prismarine-viewer/viewer/lib/worldView.js');
   const assets = require('minecraft-assets')('1.21.1');
   if (!assets) throw Error('Minecraft 1.21.1 observation assets are unavailable');
+  const viewerIndex = viewerAsset('index.js'), viewerWorker = viewerAsset('worker.js');
+  const observerFiles = fileURLToPath(new URL('../runtime/observer/', import.meta.url));
   const app = express();
-  app.disable('x-powered-by');
+  app.disable('x-powered-by'); app.enable('strict routing');
   const http = createServer(app);
   http.requestTimeout = 10000;
   http.headersTimeout = 10000;
@@ -81,6 +84,7 @@ export async function startReadonlyObserver(bot: Bot, authority: InventoryAuthor
     if (!['GET', 'HEAD'].includes(req.method)) { res.status(405).setHeader('Allow', 'GET, HEAD'); res.end(); return; }
     next();
   });
+  app.use(require('compression')());
   app.get('/api/snapshot', (_req, res) => { res.json(observerSnapshot(bot, authority)); });
   app.get('/textures/:name.png', (req, res) => {
     const name = safeName(req.params.name);
@@ -91,11 +95,14 @@ export async function startReadonlyObserver(bot: Bot, authority: InventoryAuthor
   // The pinned worker's bundled AJV/ProtoDef compiles fixed protocol schemas.
   // Limit its eval allowance to this worker response, with no network access;
   // the dashboard and viewer document keep their stricter no-eval policy.
-  app.get('/viewer/worker.js', (_req, res, next) => {
-    res.setHeader('Content-Security-Policy', "default-src 'none'; script-src 'self' 'unsafe-eval'; connect-src 'none'"); next();
+  app.get('/viewer/worker.js', (_req, res) => {
+    res.setHeader('Content-Security-Policy', "default-src 'none'; script-src 'self' 'unsafe-eval'; connect-src 'none'"); res.type('js').send(viewerWorker);
   });
+  app.get('/viewer/index.js', (_req, res) => { res.type('js').send(viewerIndex); });
+  app.get('/viewer', (_req, res) => { res.redirect(308, '/viewer/'); });
+  app.get(['/viewer/', '/viewer/index.html'], (_req, res) => { res.sendFile(join(observerFiles, 'viewer.html')); });
   app.use('/viewer', express.static(join(dirname(require.resolve('prismarine-viewer/package.json')), 'public'), { fallthrough: false, dotfiles: 'deny', etag: false }));
-  app.use(express.static(fileURLToPath(new URL('../runtime/observer/', import.meta.url)), { fallthrough: false, dotfiles: 'deny', etag: false }));
+  app.use(express.static(observerFiles, { fallthrough: false, dotfiles: 'deny', etag: false }));
   app.use((_error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => { res.status(404).end('Not found'); });
   const io = new Server(http, { path: '/viewer/socket.io', transports: ['polling', 'websocket'], serveClient: false,
     maxHttpBufferSize: 1024, allowRequest: (req, callback) => callback(null, allowed(req) && !closing && io.engine.clientsCount < MAX_CLIENTS) });

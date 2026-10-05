@@ -48,10 +48,12 @@ doors are outside this repair. A door closing after planning is still a real
 physics obstacle; the next search rejects it. The adapter does not add automatic
 reopening or change upstream block-state invalidation.
 
-The separate native `goto` and `get_path_to` tools do not use this helper and
-are not changed. Tool names, descriptions, argument schemas, response format,
-15-second default / 60-second maximum movement timeout, action serialization,
-IPC and dependency locks are unchanged. Offline fixtures use the repository's
+In 3.2.0-rc.1 the native `goto` also uses this helper, with a maximum 60-second
+timeout and the conservative dry/oxygen movement policy. `get_path_to` remains
+a read-only dry-profile estimate without the temporary door adapter, so its
+`noPath` may differ from verified `goto`. The existing action serialization and
+IPC remain unchanged; additive tool schemas and dependency locks are published
+with this candidate. See [movement safety](MOVEMENT-SAFETY.md). Offline fixtures use the repository's
 locked Minecraft 1.21.1 data and actual A*/collision/controller implementations;
 they do not establish real-server acceptance of this implementation.
 

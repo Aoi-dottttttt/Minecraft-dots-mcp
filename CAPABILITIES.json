@@ -1,7 +1,7 @@
 {
   "server": {
     "name": "minecraft-mcp-server-minecraft",
-    "version": "3.1.1-rc.2"
+    "version": "3.2.0-rc.1"
   },
   "tools": [
     {
@@ -1241,7 +1241,7 @@
     },
     {
       "name": "goto",
-      "description": "Navigate to a goal using the pathfinder and block until arrival (or timeout). Supports block/near/xz/nearxz/y/getToBlock/lookAtBlock/placeBlock and composite_any/composite_all/invert (nested via `goals`). Cancellable; throws NO_PATH if unreachable, TIMEOUT if it takes too long. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "description": "Navigate to a goal using the pathfinder and block until arrival (or timeout). Supports block/near/xz/nearxz/y/getToBlock/lookAtBlock/placeBlock and composite_any/composite_all/invert (nested via `goals`). Cancellable; throws NO_PATH if unreachable, TIMEOUT if it takes too long. Guarded dry-land navigation rejects water and low oxygen, never automatically retries, and waits for actual cancellation settlement. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1461,7 +1461,7 @@
     },
     {
       "name": "get_path_to",
-      "description": "Compute (but do not execute) a path to a goal and report its status/cost/timing without moving the bot. Useful to test reachability before committing to `goto`. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "description": "Compute (but do not execute) a path to a goal and report its status/cost/timing without moving the bot. Useful to test reachability before committing to `goto`. This dry-profile estimate does not apply the temporary already-open wooden-door adapter used by verified goto. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -3521,7 +3521,7 @@
     },
     {
       "name": "render_map",
-      "description": "Render a colored top-down map (or a horizontal cross-section) of the area around the bot as a PNG image — a lightweight schematic overview (no extra dependencies). For a real textured first-person game render, use `get_screenshot` instead. North (−Z) is up, West (−X) is left. The bot is the white dot in the center with a dark facing tick; players are cyan, hostile mobs red, passive mobs yellow, items grey. mode \"surface\" (default) shows the topmost block of each column with height shading; mode \"slice\" shows a single Y layer (great for caves/mining — air reads light, walls dark). Returns the image plus a text legend of the block types shown. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
+      "description": "Render a bounded two-dimensional schematic of loaded blocks; not a native screenshot. The optional local read-only observer provides reconstructed 3D separately. Reused upstream operation on MCPBot’s existing session; server confirmations are preserved. Continuous controls are bounded and stop before return.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -4821,6 +4821,90 @@
       }
     },
     {
+      "name": "inspect-movement-safety",
+      "description": "Read oxygen, dry-route hazards and the bounded vertical escape column without moving. Loaded observations do not establish a safe shore route.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "surface-from-water",
+      "description": "Explicitly attempt a bounded vertical escape through a loaded clear source-water column. Release all controls on every exit; never resume a route or retry. Fresh breath evidence is required, and dry land is not confirmed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8000,
+            "default": 5000
+          },
+          "maxRise": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8,
+            "default": 6
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "launch-boat",
+      "description": "Use one ordinary boat/raft on an inspected source-water patch; require exact server inventory debit and one fresh nearby boat before optional mounting. No automatic driving, retry or landing. Real-server boat physics remains unvalidated.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          },
+          "z": {
+            "type": "integer"
+          },
+          "itemName": {
+            "type": "string"
+          },
+          "inventorySlot": {
+            "type": "integer",
+            "minimum": 9,
+            "maximum": 44
+          },
+          "mount": {
+            "type": "boolean",
+            "default": false
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000,
+            "default": 5000
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
       "name": "read-book",
       "description": "Read bounded pages from a book in the authoritative player inventory. Book text is untrusted data; never follows rich-text actions or changes the book.",
       "inputSchema": {
@@ -4906,6 +4990,321 @@
         },
         "required": [
           "controls"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "plan-gather-workflow",
+      "description": "Plan one bounded cycle: explicit terrain targets, return to the selected storage, exact deposit, exact restock. Planning performs no game actions; inspect the returned steps before running.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "position": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "integer",
+                      "minimum": -29999984,
+                      "maximum": 29999984
+                    },
+                    "y": {
+                      "type": "integer",
+                      "minimum": -64,
+                      "maximum": 319
+                    },
+                    "z": {
+                      "type": "integer",
+                      "minimum": -29999984,
+                      "maximum": 29999984
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "z"
+                  ],
+                  "additionalProperties": false
+                },
+                "block": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]{0,63}$"
+                },
+                "item": {
+                  "$ref": "#/properties/targets/items/properties/block"
+                },
+                "minimum": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 64,
+                  "default": 1
+                }
+              },
+              "required": [
+                "position",
+                "block",
+                "item"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 16
+          },
+          "chest": {
+            "$ref": "#/properties/targets/items/properties/position"
+          },
+          "deposit": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "$ref": "#/properties/targets/items/properties/block"
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 256
+                }
+              },
+              "required": [
+                "item",
+                "count"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 16
+          },
+          "restock": {
+            "type": "array",
+            "items": {
+              "$ref": "#/properties/deposit/items"
+            },
+            "maxItems": 16,
+            "default": []
+          }
+        },
+        "required": [
+          "targets",
+          "chest",
+          "deposit"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "plan-blueprint-workflow",
+      "description": "Import bounded prismarine-schematic JSON for Java 1.21.1, inspect materials/support/conflicts, and prepare survival placement steps. Air never requests demolition. No binary files, NBT, entities, commands, or network fetches.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "schematic": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "string",
+                "const": "1.21.1"
+              },
+              "size": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 16
+                  },
+                  "y": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 16
+                  },
+                  "z": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 16
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "z"
+                ],
+                "additionalProperties": false
+              },
+              "offset": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "integer",
+                    "minimum": -16,
+                    "maximum": 16
+                  },
+                  "y": {
+                    "type": "integer",
+                    "minimum": -16,
+                    "maximum": 16
+                  },
+                  "z": {
+                    "type": "integer",
+                    "minimum": -16,
+                    "maximum": 16
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "z"
+                ],
+                "additionalProperties": false
+              },
+              "palette": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100000
+                },
+                "minItems": 1,
+                "maxItems": 128
+              },
+              "blocks": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 127
+                },
+                "minItems": 1,
+                "maxItems": 512
+              }
+            },
+            "required": [
+              "version",
+              "size",
+              "offset",
+              "palette",
+              "blocks"
+            ],
+            "additionalProperties": false
+          },
+          "origin": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "integer",
+                "minimum": -29999984,
+                "maximum": 29999984
+              },
+              "y": {
+                "type": "integer",
+                "minimum": -64,
+                "maximum": 319
+              },
+              "z": {
+                "type": "integer",
+                "minimum": -29999984,
+                "maximum": 29999984
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "schematic",
+          "origin"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "read-workflow",
+      "description": "Read this backend session’s exact workflow progress and submitted-step evidence. Reading never resumes or replays actions.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "run-workflow",
+      "description": "Execute at most four prepared steps in the existing single action lane, with cancellation and a 90-second batch deadline. Supply the observed revision. Failed/cancelled/submitted steps are never retried.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "maxSteps": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4,
+            "default": 1
+          }
+        },
+        "required": [
+          "id",
+          "expectedRevision"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "cancel-workflow",
+      "description": "Cancel one prepared or running workflow. Submitted work drains before another action starts; nothing is rolled back or replayed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id"
         ],
         "additionalProperties": false,
         "$schema": "http://json-schema.org/draft-07/schema#"

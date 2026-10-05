@@ -63,6 +63,10 @@ Only one controller may act at a time. Stop the first controller before attachin
 
 The optional Linux Start window is documented in [PERSISTENT-SESSIONS.md](PERSISTENT-SESSIONS.md). It requires an external user-supplied bridge and does not read its configuration until Start is clicked.
 
+## Bounded gameplay additions
+
+The candidate adds [dry-route/oxygen guards, explicit surfacing and boat-launch evidence](docs/MOVEMENT-SAFETY.md), plus [reviewable gather/storage/restock and simple-block schematic plans](docs/WORKFLOWS.md). Workflows execute only explicitly requested batches on the existing action lane, keep exact progress and never resume/retry uncertain steps. They are offline-tested scope additions, not a claim of reliable autonomous swimming, complete boat physics, farming or unrestricted survival building.
+
 ## Optional read-only observation
 
 Add `--observe-port 3100` only when starting a new authorized daemon session to serve a local status/inventory dashboard and Prismarine 3D reconstruction at `http://127.0.0.1:3100/`. It shares the existing bot, accepts no gameplay actions and is disabled by default. No remote bind, authentication or public exposure is added. See [observer architecture, security and tests](docs/READONLY-OBSERVER.md).

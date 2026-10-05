@@ -7,7 +7,7 @@ import { startReadonlyObserver } from '../dist/readonly-observer.js';
 const require = createRequire(import.meta.url);
 const { Vec3 } = require('vec3'), registry = require('prismarine-registry')('1.21.1');
 const Chunk = require('prismarine-chunk')('1.21.1'), chunk = new Chunk();
-for (let x = 0; x < 16; x++) for (let z = 0; z < 16; z++) chunk.setBlockStateId(new Vec3(x, 63, z), registry.blocksByName.grass_block.defaultState);
+for (const y of [-33, 63, 279]) for (let x = 0; x < 16; x++) for (let z = 0; z < 16; z++) chunk.setBlockStateId(new Vec3(x, y, z), registry.blocksByName.grass_block.defaultState);
 let actions = 0;
 const rejectAction = () => { actions++; throw Error('Read-only observer attempted gameplay'); };
 const bot = Object.assign(new EventEmitter(), { version: '1.21.1', username: 'Fixture',
@@ -35,6 +35,8 @@ try {
   assert.equal(await page.locator('#inventory img').getAttribute('alt'), 'stone');
   assert.equal(await page.locator('button,input,textarea').count(), 0, 'Dashboard has no gameplay inputs');
   await page.reload(); await page.waitForFunction(() => document.querySelectorAll('#inventory .slot').length === 46);
+  for (const y of [64, -32, 280]) {
+  bot.entity.position.y = y;
   await page.goto(observer.url + 'viewer/'); await page.waitForSelector('canvas');
   await page.waitForFunction(() => {
     const canvas = document.querySelector('canvas'), gl = canvas?.getContext('webgl2') || canvas?.getContext('webgl');
@@ -46,7 +48,9 @@ try {
     return green > 100;
   }, null, { timeout: 60000 });
   await page.mouse.click(600, 450); await page.mouse.click(600, 450);
+  bot.emit('respawn'); await page.waitForFunction(() => !document.querySelector('#stream-status').hidden && document.querySelector('#stream-message').textContent.includes('stale'));
+  }
   await page.goto(observer.url); await page.waitForFunction(() => document.querySelectorAll('#inventory .slot').length === 46);
   assert.deepEqual(errors, []); assert.equal(actions, 0);
-  console.log(JSON.stringify({ passed: true, dashboardSlots: 46, textured3DWorldRendered: true, browser: 'Chromium', fixtureOnly: true, gameActions: actions }));
+  console.log(JSON.stringify({ passed: true, dashboardSlots: 46, textured3DWorldRendered: true, heights: [-32, 64, 280], staleOverlayVerified: true, browser: 'Chromium', fixtureOnly: true, gameActions: actions }));
 } finally { await browser?.close(); await observer.close(); }

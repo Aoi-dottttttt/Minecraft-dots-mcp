@@ -46,7 +46,7 @@ export function registerWorkflowTools(options: Options): { names: string[]; canc
   const move = async (position: Position, distance: number, signal: AbortSignal): Promise<void> => {
     ready(signal);
     if (bot.entity.position.distanceTo(vec(position)) > 64) throw Error('Workflow step is outside the 64-block local bound');
-    await moveAndVerify(bot, new pathfinder.goals.GoalNear(position.x, position.y, position.z, distance), 15000);
+    await moveAndVerify(bot, new pathfinder.goals.GoalNear(position.x, position.y, position.z, distance), 15000, { signal });
     ready(signal);
   };
   const executor = async (step: WorkflowStep, signal: AbortSignal): Promise<Record<string, unknown>> => {

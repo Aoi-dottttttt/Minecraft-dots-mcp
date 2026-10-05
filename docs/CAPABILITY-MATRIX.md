@@ -29,12 +29,16 @@ These are upstream implementation references, not a Mojang protocol specificatio
 - [Pathfinder movement implementation](https://github.com/PrismarineJS/mineflayer-pathfinder/blob/master/lib/movements.js)
 - [Forge channel compatibility rules](https://docs.minecraftforge.net/en/1.21.x/networking/simpleimpl/) and [legacy protocol-forge scope](https://github.com/PrismarineJS/node-minecraft-protocol-forge)
 
+## Local observation outside the MCP catalog
+
+The opt-in dashboard/3D service is not an extra gameplay tool. HTTP/socket privacy and lifecycle tests are in `tests/readonly-observer.test.ts`; adapted 1.21.1 worker geometry at negative and high Y is checked by `scripts/test-observer-worker.mjs`. Browser pixel evidence requires the dedicated CI job. See [observer boundaries](READONLY-OBSERVER.md).
+
 ## Exact backend tool inventory
 
 | Tool | Family | Evidence level | Fixture |
 | --- | --- | --- | --- |
 | `get-position` | Observation | catalog-only | — |
-| `move-to-position` | Movement | catalog-only | — |
+| `move-to-position` | Movement | dedicated-fixture | `tests/open-door-navigation.test.cjs` |
 | `look-at` | Movement | catalog-only | — |
 | `jump` | Movement | catalog-only | — |
 | `move-in-direction` | Movement | catalog-only | — |
@@ -83,7 +87,7 @@ These are upstream implementation references, not a Mojang protocol specificatio
 | `get_cursor_target` | Observation | catalog-only | — |
 | `get_blocks_in_region` | Observation | catalog-only | — |
 | `wait_for_chunks_to_load` | Observation | catalog-only | — |
-| `goto` | Movement | catalog-only | — |
+| `goto` | Movement | dedicated-fixture | `tests/movement-safety.test.ts` |
 | `set_goal` | Movement | catalog-only | — |
 | `flee_from` | Movement | catalog-only | — |
 | `follow_entity` | Movement | catalog-only | — |
@@ -195,3 +199,11 @@ These are upstream implementation references, not a Mojang protocol specificatio
 | `move-controls` | Movement | catalog-only | — |
 | `list-gameplay-capabilities` | Observation | catalog-only | — |
 | `game-command` | Text and events | catalog-only | — |
+| `inspect-movement-safety` | Movement | dedicated-fixture | `tests/movement-safety.test.ts` |
+| `surface-from-water` | Movement | dedicated-fixture | `tests/movement-safety.test.ts` |
+| `launch-boat` | Movement | dedicated-fixture | `tests/verified-boat.test.ts` |
+| `plan-gather-workflow` | Bounded workflows | dedicated-fixture | `tests/workflow-tools.test.ts` |
+| `plan-blueprint-workflow` | Bounded workflows | dedicated-fixture | `tests/workflow-tools.test.ts` |
+| `read-workflow` | Bounded workflows | dedicated-fixture | `tests/workflow-tools.test.ts` |
+| `run-workflow` | Bounded workflows | dedicated-fixture | `tests/workflow-tools.test.ts` |
+| `cancel-workflow` | Bounded workflows | dedicated-fixture | `tests/workflow-tools.test.ts` |

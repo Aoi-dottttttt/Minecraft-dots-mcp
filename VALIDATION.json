@@ -1,8 +1,8 @@
 {
-  "candidate": "3.1.1-rc.2",
+  "candidate": "3.2.0-rc.1",
   "date": "2026-10-05",
-  "baseCommit": "5e5b2e33148047f500ac8f398cd15d1419161e49",
-  "status": "source candidate; local socket lifecycle checks incomplete; exact-commit hosted CI required",
+  "baseCommit": "5725756a8e2bec268e0de8cf05c173c2cfc3af3b",
+  "status": "source integration candidate; local functional checks passed except documented Unix-socket environment limits; exact-commit hosted CI and browser pixels required",
   "environment": {
     "node": "24.19.0",
     "npm": "11.9.0",
@@ -11,17 +11,18 @@
   "checks": {
     "root_locked_install": {
       "status": "passed",
-      "packages": 504,
-      "lifecycleScripts": false
+      "packages": 574,
+      "lifecycleScripts": false,
+      "detail": "Fresh isolated npm ci from final package.json/lock"
     },
     "vendor_locked_install": {
       "status": "passed",
       "packages": 318,
       "lifecycleScripts": false
     },
-    "dependency_lock_comparison": {
+    "core_dependency_compatibility": {
       "status": "passed",
-      "detail": "Dependency records unchanged; only root candidate version metadata differs from the base"
+      "detail": "Mineflayer 4.39.0, pathfinder 2.4.5, minecraft-data 3.117.0, prismarine-chunk 1.41.0, prismarine-item 1.17.0, prismarine-physics 1.11.1, minecraft-protocol 1.68.0 and MCP SDK 1.32.0 unchanged"
     },
     "vendor_build": {
       "status": "passed"
@@ -37,12 +38,19 @@
     },
     "root_unit": {
       "status": "passed",
-      "tests": 567
+      "tests": 619
+    },
+    "open_door_navigation": {
+      "status": "passed",
+      "tests": 90
+    },
+    "special_terrain_navigation": {
+      "status": "passed",
+      "tests": 8
     },
     "vendor_unit": {
       "status": "passed",
-      "tests": 43,
-      "runner": "Vitest 4.1.11"
+      "tests": 43
     },
     "stdio": {
       "status": "passed",
@@ -50,7 +58,7 @@
     },
     "runtime_fixture": {
       "status": "passed",
-      "integratedTools": 162,
+      "integratedTools": 170,
       "legacyToolCount": 28
     },
     "synthetic_protocol": {
@@ -67,96 +75,93 @@
       "status": "passed",
       "cases": 22
     },
-    "book_observation": {
+    "observer_http_socket": {
       "status": "passed",
-      "tests": 14,
-      "includedInRootUnit": true
+      "tests": 11,
+      "includedInRootUnit": true,
+      "scope": "same-origin/Host/method restrictions; authoritative snapshot/NBT redaction; actual Socket.IO polling/websocket; input rejection; limits and cleanup"
+    },
+    "observer_runtime": {
+      "status": "passed",
+      "cases": 3,
+      "scope": "disabled default, explicit loopback startup/shutdown, occupied port leaves fake backend available"
+    },
+    "observer_packaged_worker": {
+      "status": "passed",
+      "version": "prismarine-viewer@1.33.0",
+      "scope": "SHA-gated height adapter; actual packaged worker geometry for blocks at Y=-32,63,280; 120 vertices across three sections; no browser pixels"
+    },
+    "observer_browser": {
+      "status": "not_run_on_final_source_locally",
+      "detail": "Chromium startup on this executor is blocked by Unix socket EPERM; dedicated hosted Chromium job checks dashboard/reload, textured pixels at Y=-32,64,280 and stale overlay after respawn"
     },
     "launcher_lifecycle": {
       "status": "failed_in_local_environment",
       "passedTests": 17,
       "totalTests": 18,
-      "detail": "The offline daemon readiness case timed out; local daemon/controller socket tests independently report listen EPERM"
+      "detail": "Offline daemon readiness times out because Unix socket listen is prohibited; original assertions retained"
     },
-    "daemon_lifecycle": {
-      "status": "blocked_by_environment",
-      "detail": "Initial Unix socket listen returned EPERM"
+    "persistent_daemon_lifecycle": {
+      "status": "failed_in_local_environment",
+      "detail": "listen EPERM on a fresh private Unix socket before lifecycle assertions; no test weakening"
     },
-    "queue_controller": {
-      "status": "blocked_by_environment",
-      "detail": "Initial Unix socket listen returned EPERM before the response-loss scenario; original response-loss assertions remain and startup diagnostics were improved"
+    "controller_lifecycle": {
+      "status": "failed_in_local_environment",
+      "detail": "listen EPERM on a fresh private Unix socket before controller assertions; no test weakening"
     },
-    "aggregate_verify": {
-      "status": "incomplete",
-      "detail": "Passed build, types, lint, unit, stdio, protocol, runtime, chat and frontend, then stopped at local launcher readiness. Separately attempted the remaining suites"
+    "verify_aggregate": {
+      "status": "failed_in_local_environment",
+      "detail": "Build, types, lint, 619 units, doors90, terrain8, stdio/protocol/runtime/chat/frontend passed; stopped at launcher readiness. Remaining suites independently attempted"
     },
     "public_hardening": {
       "status": "passed",
-      "regexToolsAbsent": true,
-      "privateStateRequired": true,
-      "symlinkAncestorRejected": true,
-      "exclusiveRandomReportWrites": true,
-      "configurableUsername": true
+      "integratedTools": 170
     },
     "capability_matrix": {
       "status": "passed",
-      "tools": 162,
-      "dedicatedFixtureRows": 28,
-      "scope": "Catalog/document consistency only"
+      "documentedTools": 170
     },
-    "source_manifest": {
-      "status": "verified"
-    },
-    "independent_security_review": {
-      "status": "incomplete"
-    },
-    "hosted_ci": {
-      "status": "pending_at_source_snapshot",
-      "requiredNodeMajors": [
-        22,
-        24
-      ],
-      "detail": "Check the pull request checks for the exact published commit; local socket limits are not a full pass"
-    },
-    "real_server_acceptance": {
-      "status": "not_run"
-    },
-    "boats_end_to_end": {
-      "status": "not_run"
+    "publication_manifest": {
+      "status": "passed"
     }
   },
-  "verificationNotes": [
-    "All automated checks used neutral fixtures or synthetic loopback servers; no existing game session, bridge credentials or world was used.",
-    "An early aggregate run exposed an outdated policy-only VM fixture context after the shared action wrapper changed. Its original block-policy assertions were preserved; the final root unit run passed.",
-    "Placement regressions cover exact debit followed by refund/re-debit, raw server evidence, cancellation and chunk/dimension invalidation.",
-    "The historical response-loss readiness timeout is not claimed fixed; this candidate retains its assertions and improves bounded diagnostics.",
-    "This is the local pre-publication snapshot. Hosted checks are reported on the pull request and must be inspected for the exact commit.",
-    "A passing tool-registration or layout check does not establish complete gameplay capability."
-  ],
-  "liveServerUsed": false,
-  "credentialsUsed": false,
-  "worldModified": false,
-  "knownDependencyAdvisories": {
+  "dependencyAudit": {
+    "date": "2026-10-05",
     "root": {
       "info": 0,
       "low": 0,
       "moderate": 6,
       "high": 5,
-      "critical": 0,
-      "total": 11
+      "critical": 0
     },
     "vendor": {
       "info": 0,
       "low": 0,
       "moderate": 12,
       "high": 0,
-      "critical": 0,
-      "total": 12
+      "critical": 0
     },
-    "remainingRootHighScope": "one unpatched development-only braces/glob advisory and its dependency-chain records",
-    "securityClearance": false,
-    "details": "SECURITY.md",
-    "measuredAt": "2026-10-04",
-    "refreshedForThisCandidate": false
+    "detail": "Original development glob and authentication chains remain. New observation dependencies add no high/critical records; Express4.22.3 resolves the qs advisories found during integration. Full web-inventory and Node19-dependent state-machine packages are not installed. See SECURITY.md."
+  },
+  "ci": {
+    "status": "pending_exact_commit",
+    "jobs": [
+      "offline (22)",
+      "offline (24)",
+      "observer-browser"
+    ],
+    "sourceOfTruth": "GitHub Actions results on the candidate PR head; this offline snapshot does not assert future CI success"
+  },
+  "boundaries": {
+    "liveServerUsed": false,
+    "realCredentialsUsed": false,
+    "liveBackendRestarted": false,
+    "secondGameBotStarted": false,
+    "mergedToMain": false,
+    "deployed": false,
+    "newObserverDefaultEnabled": false,
+    "observerBind": "127.0.0.1 only",
+    "privateMemoryIncluded": false,
+    "realServerAcceptance": "not performed; swimming, boat physics, workflow end-to-end and broad plugin/server compatibility remain separate acceptance work"
   }
 }
