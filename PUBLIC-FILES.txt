@@ -38,6 +38,7 @@ runtime/minecraft-daemon.mjs
 runtime/minecraft-frontend.mjs
 runtime/minecraft-ipc.mjs
 runtime/minecraft-server.mjs
+runtime/observer-ui.py
 runtime/observer/app.js
 runtime/observer/index.html
 runtime/observer/style.css
@@ -59,6 +60,7 @@ scripts/smoke-stdio.mjs
 scripts/test-fenced-plain-chat.mjs
 scripts/test-launch-lifecycle.py
 scripts/test-observer-browser.mjs
+scripts/test-observer-ui.py
 scripts/test-observer-worker.mjs
 src/blueprint-plan.ts
 src/book-observation.ts
@@ -73,6 +75,7 @@ src/logger.ts
 src/main.ts
 src/message-store.ts
 src/movement-safety.ts
+src/oxygen-authority.ts
 src/placement-provenance.ts
 src/readonly-observer.ts
 src/stdio-filter.ts
@@ -133,6 +136,7 @@ tests/movement-safety.test.ts
 tests/native-ore-policy.test.ts
 tests/native-plugin-startup.test.ts
 tests/open-door-navigation.test.cjs
+tests/oxygen-authority.test.ts
 tests/position-tools.test.ts
 tests/readonly-observer.test.ts
 tests/review-capability-gaps.test.ts

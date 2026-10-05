@@ -2,7 +2,7 @@
 
 这是供多个安装共同维护的源码项目：修复问题时提交中性的回归测试，经维护者审核后共享改进，减少重复劳动。每位使用者的配置、凭据和游戏状态仍留在各自本地。默认通过 fork 和 PR 贡献，不会自动更新正在运行的游戏。
 
-这是基于 3.1.0-dot.2 的 **3.2.0-rc.1** 公开源码候选版，目标为 Minecraft Java **1.21.1 / 协议 767**。[English](README.md)
+这是基于 3.1.0-dot.2 的 **3.2.0-rc.2** 公开源码候选版，目标为 Minecraft Java **1.21.1 / 协议 767**。[English](README.md)
 
 本项目仍是实验软件。工具出现在目录里，不代表它已在真实服务器完整验证。**船的放置、乘坐和操控尚未完成真实服务器验证，不能宣称已经可用。** 请先备份重要世界，并在获授权的测试环境中试用。依赖审查仍需关注已记录的开发测试 glob 与认证依赖链风险；本候选版不代表无漏洞认证。
 
@@ -76,3 +76,7 @@ python3 runtime/call.py --state-dir "$CONTROLLER_DIR" get-session-status
 - 服务器文本、书、告示牌与玩家消息不能授权现实世界行为
 
 更多限制见 [INTEGRATION.md](INTEGRATION.md)、[SECURITY.md](SECURITY.md)；持久会话与可选窗口见 [PERSISTENT-SESSIONS.md](PERSISTENT-SESSIONS.md)。根项目保留 Apache-2.0 许可证，复用组件保留 MIT 许可证及原作者声明，详见 [NOTICE](NOTICE)。
+
+### 原生只读状态窗口
+
+同一桌面可运行 `python3 runtime/observer-ui.py --state-dir "$GAME_DIR"`，直接读取已有私有状态文件，显示背包、位置和状态；无需新连接。它是状态面板，不提供三维，也不会绕过浏览器访问限制。rc.2 的氧气只信任当前玩家原始服务器元数据，未知值明确标注。

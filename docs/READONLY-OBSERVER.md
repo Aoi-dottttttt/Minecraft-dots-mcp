@@ -28,6 +28,33 @@ There is deliberately no bind-address, authentication, reverse-proxy or remote-p
 
 The browser may retain already displayed game data in memory. Do not share screenshots or the page with others without the player's authorization.
 
+## Native status window
+
+For environments where a browser cannot access the loopback observer, an optional
+Tk window reads existing local daemon status files directly:
+
+```sh
+python3 runtime/observer-ui.py --state-dir "$GAME_DIR"
+python3 runtime/observer-ui.py --state-dir "$GAME_DIR" --check
+```
+
+The supplied directory may be the daemon directory or the launcher's private
+state root. It must already exist, be user-owned and private. Python 3 with Tk
+and a desktop display are required; there are no new Python package dependencies.
+The window refreshes once per second, rejects symlinked/untrusted/oversized
+reports, and projects only whitelisted position, health and authoritative slots.
+It neither sends HTTP/IPC/MCP requests nor starts a controller or game connection.
+Closing it has no gameplay effect. Both broker and backend timestamps must be within 30 seconds; disconnected
+sessions and broker uncertainty/detach fences cannot appear live; a read error marks any retained data unavailable.
+Older backend air readings are labeled unverified. rc.2 self-air samples show
+their provenance and age; a fresh status file does not mean a new air sample.
+
+This is a native **status and inventory window**, not a 3D renderer or a way to
+bypass browser access restrictions. Native 3D remains separate, unshipped work.
+Neutral parser tests run with `npm run test:observer-ui`. A desktop rendering
+check observed approximately 24 MiB RSS and 0.7% last-window CPU, a point sample
+on one Linux desktop rather than a performance guarantee.
+
 ## Ecosystem reuse and reviewed exclusions
 
 `prismarine-viewer@1.33.0` supplies the renderer, packaged texture/model bundles, workers and `WorldView`; `minecraft-assets@1.17.0` supplies 1.21.1 inventory textures. Both are PrismarineJS ecosystem packages. The first-party adapter imports `WorldView` directly and owns the loopback HTTP lifecycle. It does not call upstream's convenience `mineflayer()` server, whose current implementation listens without a host restriction. The package's 1.21.1 support has legacy height defects. `src/viewer-compatibility.ts` verifies the exact SHA-256 of both pinned browser bundles before applying explicit in-memory corrections: section scheduling/removal over vanilla Y=-64..319, minY-relative worker section indices, negative-Y face visibility, and initial underground camera position. It also limits geometry workers to one and adds stream-status events for the stale overlay. Installed packages and generated bundles are not rewritten or committed. A changed fingerprint fails observer initialization; it never silently applies an unreviewed patch. Vanilla Nether/End columns retain their actual bounds through worker checks; modded dimensions outside this envelope remain unsupported. MIT notices and bundled license files remain with the original package.

@@ -1,6 +1,14 @@
-# Public candidate: 3.2.0-rc.1
+# Public candidate: 3.2.0-rc.2
 
 This additive candidate builds on public main `5725756a8e2bec268e0de8cf05c173c2cfc3af3b`, including the merged open-wooden-door repair. It requires maintainer review and is not a deployment or real-server acceptance claim.
+
+## rc.2 safety correction
+
+Own-player raw air metadata replaces the upstream unattributed oxygen cache for
+navigation, surfacing and reports. A file-only Tk status/inventory window is
+available without new sockets or game connections. Native 3D is not included.
+Swimming/boat and gather closed-loop acceptance remain unestablished. This
+version requires a separately authorized normal restart; no live hot patching.
 
 ## Ecosystem integration
 

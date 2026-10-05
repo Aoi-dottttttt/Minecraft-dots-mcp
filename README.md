@@ -2,7 +2,7 @@
 
 A shared maintenance project: fix a bug once, keep a neutral regression, and share reviewed improvements across installations. Each installation keeps its own configuration, credentials and game state local. Contributions use [forks and pull requests](CONTRIBUTING.md); installation and gameplay still need the respective user’s authorization.
 
-Public source candidate **3.2.0-rc.1**, based on 3.1.0-dot.2 for Minecraft Java **1.21.1 / protocol 767**. It combines server-authoritative inventory/crafting checks with a persistent game backend and a restartable MCP controller. [中文快速开始](README.zh-CN.md)
+Public source candidate **3.2.0-rc.2**, based on 3.1.0-dot.2 for Minecraft Java **1.21.1 / protocol 767**. It combines server-authoritative inventory/crafting checks with a persistent game backend and a restartable MCP controller. [中文快速开始](README.zh-CN.md)
 
 This is experimental software. A registered tool is not proof that its complete behavior works on a real server. In particular, **boat placement/riding is not live-validated and is not advertised as working**. Back up valuable worlds, use an authorized test environment first, and review [scope and limits](INTEGRATION.md) and [security](SECURITY.md). The dependency audit still requires reviewing documented development-only glob and optional authentication-chain advisories; this candidate is not a blanket security certification.
 
@@ -70,6 +70,8 @@ The candidate adds [dry-route/oxygen guards, explicit surfacing and boat-launch 
 ## Optional read-only observation
 
 Add `--observe-port 3100` only when starting a new authorized daemon session to serve a local status/inventory dashboard and Prismarine 3D reconstruction at `http://127.0.0.1:3100/`. It shares the existing bot, accepts no gameplay actions and is disabled by default. No remote bind, authentication or public exposure is added. See [observer architecture, security and tests](docs/READONLY-OBSERVER.md).
+
+For a native status/inventory window, run `python3 runtime/observer-ui.py --state-dir "$GAME_DIR"` on the same desktop. It reads existing private files only; it does not provide 3D or bypass browser restrictions.
 
 ## Entrypoints and safety scope
 

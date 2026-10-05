@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.2.0-rc.2: own-player air evidence and native status window
+
+- Fix oxygen provenance: the pinned entity plugin can report other entities' air as the player's. Guarded navigation, surfacing and reports now use raw current-player protocol metadata only, with explicit unknown/age/revision information and lifecycle invalidation
+- Add a file-only Tk status/inventory window using existing authoritative reports and official item textures. It starts no connection and shows stale or unverified observations explicitly
+- Add locked-plugin/protocol regression coverage and native parser safety fixtures; retain all reachability and exact-inventory guards
+- This candidate is separate from deployment. Swimming/boats and gather closed-loop acceptance remain unestablished; native 3D is not included
+
 ## 3.2.0-rc.1: bounded ecosystem integration candidate
 
 - Add an opt-in, loopback-only status/inventory dashboard and Prismarine 3D reconstruction sharing the existing bot; drop all browser gameplay input and remove private text/NBT from observations

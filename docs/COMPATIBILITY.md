@@ -4,8 +4,8 @@ Target: Minecraft Java 1.21.1, protocol 767, offline protocol identity through a
 
 ## Independent versions
 
-- Package/backend version: currently 3.2.0-rc.1
-- Frontend/controller version: currently 3.2.0-rc.1
+- Package/backend version: currently 3.2.0-rc.2
+- Frontend/controller version: currently 3.2.0-rc.2
 - Local IPC protocol version: 1, checked during attachment
 - Tool schemas: CAPABILITIES.json, regenerated from the networkless fixture
 
@@ -48,7 +48,7 @@ doors are outside this repair. A door closing after planning is still a real
 physics obstacle; the next search rejects it. The adapter does not add automatic
 reopening or change upstream block-state invalidation.
 
-In 3.2.0-rc.1 the native `goto` also uses this helper, with a maximum 60-second
+Since 3.2.0-rc.1 the native `goto` also uses this helper, with a maximum 60-second
 timeout and the conservative dry/oxygen movement policy. `get_path_to` remains
 a read-only dry-profile estimate without the temporary door adapter, so its
 `noPath` may differ from verified `goto`. The existing action serialization and
@@ -57,7 +57,7 @@ with this candidate. See [movement safety](MOVEMENT-SAFETY.md). Offline fixtures
 locked Minecraft 1.21.1 data and actual A*/collision/controller implementations;
 they do not establish real-server acceptance of this implementation.
 
-## Additive ecosystem candidate (3.2.0-rc.1)
+## Additive ecosystem candidate (3.2.0-rc.2)
 
 IPC remains version 1. New session-only workflow tools and the optional
 `--observe-port` startup flag are additive. `get-session-status` adds an `observer`
@@ -71,9 +71,17 @@ and block-entity/item NBT, and cannot dispatch gameplay. Bounded workflows retai
 existing authority/fence rules and add revision-checked, one-batch-at-a-time plans.
 See [observation](READONLY-OBSERVER.md) and [workflows](WORKFLOWS.md).
 
+## Own-player air correction (3.2.0-rc.2)
+
+Guarded reports add `oxygenEvidence`; `oxygen` can be null until raw metadata
+for the current player has been observed. Unattributed upstream breath/cache
+values are not evidence. Existing numeric consumers must handle unknown rather
+than substitute full air. This is a safety correction within IPC 1; it requires
+a newly started backend, and does not authorize automatic rescue or reconnect.
+
 ## Change policy
 
-Schema or semantic changes require a documented compatibility decision, regression fixture and maintainer review. Breaking tool/IPC contracts require a version boundary and migration notes. Do not infer compatibility solely from matching tool names or package version. The public candidate is 3.2.0-rc.1 so it cannot be confused with the historical base.
+Schema or semantic changes require a documented compatibility decision, regression fixture and maintainer review. Breaking tool/IPC contracts require a version boundary and migration notes. Do not infer compatibility solely from matching tool names or package version. The public candidate is 3.2.0-rc.2 so it cannot be confused with the historical base.
 
 ## Verification boundaries
 

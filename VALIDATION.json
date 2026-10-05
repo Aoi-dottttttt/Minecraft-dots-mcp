@@ -1,8 +1,8 @@
 {
-  "candidate": "3.2.0-rc.1",
+  "candidate": "3.2.0-rc.2",
   "date": "2026-10-05",
   "baseCommit": "5725756a8e2bec268e0de8cf05c173c2cfc3af3b",
-  "status": "source integration candidate; local functional checks passed except documented Unix-socket environment limits; exact-commit hosted CI and browser pixels required",
+  "status": "Oxygen-source correction and native file-only observer candidate; exact-head hosted CI required",
   "environment": {
     "node": "24.19.0",
     "npm": "11.9.0",
@@ -38,7 +38,7 @@
     },
     "root_unit": {
       "status": "passed",
-      "tests": 619
+      "tests": 631
     },
     "open_door_navigation": {
       "status": "passed",
@@ -111,7 +111,7 @@
     },
     "verify_aggregate": {
       "status": "failed_in_local_environment",
-      "detail": "Build, types, lint, 619 units, doors90, terrain8, stdio/protocol/runtime/chat/frontend passed; stopped at launcher readiness. Remaining suites independently attempted"
+      "detail": "Build, types, lint, 631 units, doors90, terrain8, stdio/protocol/runtime/chat/frontend passed; stopped at launcher readiness. Remaining suites independently attempted"
     },
     "public_hardening": {
       "status": "passed",
@@ -123,6 +123,16 @@
     },
     "publication_manifest": {
       "status": "passed"
+    },
+    "native_observer": {
+      "status": "passed",
+      "tests": 15,
+      "scope": "File-only allowlist, private ownership/modes, symlink/size/schema rejection, stale and missing-cursor handling, own-air evidence; native desktop rendering observed separately"
+    },
+    "oxygen_authority": {
+      "status": "passed",
+      "includedInRootUnit": true,
+      "scope": "Actual locked entities plugin pollution reproduction and protocol 767 serialization; foreign low/high air cannot stop dry navigation or confirm surfacing; own identity/respawn/death/end invalidation and post-step revision required"
     }
   },
   "dependencyAudit": {
@@ -152,11 +162,11 @@
     ],
     "sourceOfTruth": "GitHub Actions results on the candidate PR head; this offline snapshot does not assert future CI success",
     "previousRun": {
-      "head": "c6771d7fde6bc1f1bf0f3ea4a4996724121a024d",
-      "url": "https://github.com/Aoi-dottttttt/Minecraft-dots-mcp/actions/runs/37288755640",
+      "head": "e78de1a008d04acdab286ceedee589422a4d554d",
+      "url": "https://github.com/Aoi-dottttttt/Minecraft-dots-mcp/actions/runs/37289395832",
       "offline22": "passed",
       "offline24": "passed",
-      "observerBrowser": "failed green-grass pixel assertion; fixture now explicitly uses plains rather than default badlands; same pixel assertion retained"
+      "observerBrowser": "passed"
     }
   },
   "boundaries": {
@@ -169,6 +179,6 @@
     "newObserverDefaultEnabled": false,
     "observerBind": "127.0.0.1 only",
     "privateMemoryIncluded": false,
-    "realServerAcceptance": "not performed; swimming, boat physics, workflow end-to-end and broad plugin/server compatibility remain separate acceptance work"
+    "realServerAcceptance": "Prior rc.1 smoke did not establish water/boat or gather closed-loop acceptance. This rc.2 source is not yet deployed; no live acceptance is claimed."
   }
 }

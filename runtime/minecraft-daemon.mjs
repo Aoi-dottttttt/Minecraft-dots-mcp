@@ -12,7 +12,7 @@ import { parseArgs } from 'node:util';
 import { validateObserverPort } from '../dist/readonly-observer.js';
 import { IPC_VERSION, MAX_FRAME_BYTES, SOCKET_NAME, encodeFrame, stableJson, validateStateDir } from './minecraft-ipc.mjs';
 
-const DAEMON_VERSION = '3.2.0-rc.1';
+const DAEMON_VERSION = '3.2.0-rc.2';
 const CALL_TIMEOUT_MS = 180000;
 const MAX_LEDGER_BYTES = 16 * MAX_FRAME_BYTES;
 const MAX_PEER_REQUESTS = 8, MAX_GLOBAL_REQUESTS = 32;

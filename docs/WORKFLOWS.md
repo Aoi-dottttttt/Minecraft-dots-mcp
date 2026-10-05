@@ -156,3 +156,12 @@ full farm workflows remain outside this stage.
   changed targets/dimension and inventory fences
 - Existing workstation fixtures were rerun unchanged; their passing results do
   not upgrade them to real-world validation
+
+## Reachability limit
+
+The current gather approach uses a bounded `GoalNear` position, which does not
+guarantee line of sight to a block face. A nearby obstructed target is refused
+by the final `canDigBlock`/`canSeeBlock` guard before digging. Such a failed or
+uncertain step is not collection success and must not be automatically replayed;
+later storage/restock steps remain pending. Visible-face stance planning is not
+implemented in this candidate.

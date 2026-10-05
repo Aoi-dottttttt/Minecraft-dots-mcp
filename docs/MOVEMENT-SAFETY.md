@@ -47,10 +47,24 @@ single action in the ordinary serialized lane:
   excessive lateral drift and dimension changes
 - Uses only ordinary jump controls, releasing all keys on success, failure,
   timeout and cancellation
-- Requires a fresh server-derived breath event at least 19/20, together with an
+- Requires a raw own-player metadata revision newer than this action's starting
+  revision and at least 19/20 air, together with an
   observed head position in air, before reporting breath confirmation
 
 Local physics movement or a pre-existing oxygen value alone is insufficient.
+
+The pinned Mineflayer 4.39.0 entity plugin writes other entities' `air_supply`
+into its generic `oxygenLevel` and emits unattributed `breath` events. Neither
+is trusted. The first-party authority filters raw protocol-767 metadata by the
+current player's entity ID and exposes `oxygenEvidence`, including source,
+revision, timestamp and sample age. Unknown air is `null` in reports. Login,
+respawn, death, disconnect and identity/dimension changes invalidate old samples.
+No guessed initial 20/20 or arbitrary time-to-live clears a real low-air sample.
+Unknown air does not itself prohibit a dry route; physical water guards remain.
+Known own low air still stops dry navigation until the server reports recovery.
+Surfacing rechecks the latest sample after completion, so an immediate low-air
+correction cannot preserve a transient successful result. Native `breath` events
+are never surfacing confirmation or navigation-interruption evidence.
 The result always states `dryLandConfirmed: false` and `automaticRetry: false`.
 It does not establish shore access, safe landing, a persistent air pocket, or
 reliable automatic swimming. Tight underwater passages may be unsupported even
