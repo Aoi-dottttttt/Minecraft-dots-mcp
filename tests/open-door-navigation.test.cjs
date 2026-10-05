@@ -284,7 +284,7 @@ test('exclusion costs are preserved for passable door nodes', async () => {
     const door = f.bot.pathfinder.movements.getNeighbors(new Move(0, 65, -1, 0, 0)).find(point => point.z === 0);
     // Upstream charges exclusionStep on entry and in safeOrBreak for both halves.
     assert.equal(door.cost, 1 + 7 + 7 + 7);
-    assert.equal(f.bot.pathfinder.movements.exclusionAreasStep, f.original.exclusionAreasStep);
+    assert.deepEqual(f.bot.pathfinder.movements.exclusionAreasStep.slice(0, f.original.exclusionAreasStep.length), f.original.exclusionAreasStep);
   }, f => { f.original.exclusionAreasStep.push(block => block.name === 'oak_door' ? 7 : 0); });
   assert.ifError(r.error); assert.equal(r.original.exclusionAreasStep.length, 1);
 });
@@ -332,6 +332,20 @@ test('actual controller handles a neutral offset room approach to one open doorw
   await runController(f, goal);
 });
 
+for (const support of ['stone', 'stone_slab']) test(`raised ${support} door threshold stays outside the straight same-height adapter`, async () => {
+  const r = await runPlan({}, undefined, f => {
+    const original = f.bot.blockAt;
+    f.bot.blockAt = position => {
+      const p = position.floored();
+      if (p.x !== 0 || p.z !== 0 || p.y < 65 || p.y > 67) return original(position);
+      const block = p.y === 65 ? Block.fromProperties(support, support === 'stone_slab' ? { type: 'bottom', waterlogged: false } : {}, 0)
+        : Block.fromProperties('oak_door', { open: true, half: p.y === 66 ? 'lower' : 'upper', facing: 'north', hinge: 'left', powered: false }, 0);
+      block.position = p; return block;
+    };
+  });
+  assert.equal(r.result?.status, 'noPath'); assert.ok(r.error);
+});
+
 for (const mode of ['synchronous throw', 'async reject', 'cancel', 'timeout', 'missed goal', 'death then cancel', 'disconnect then timeout']) {
   test(`${mode} restores exact movement policy and listener baseline`, async () => {
     const f = fixture(); const before = listenerSnapshot(f.bot); const { moveAndVerify } = await entry;
@@ -350,7 +364,7 @@ for (const mode of ['synchronous throw', 'async reject', 'cancel', 'timeout', 'm
     if (mode === 'death then cancel') f.bot.emit('death');
     if (mode === 'disconnect then timeout') f.bot.emit('end', 'neutral fixture disconnect');
     if (mode === 'cancel' || mode === 'death then cancel') f.bot.pathfinder.setGoal(null);
-    const expected = mode.includes('timeout') ? /timed out/ : mode === 'missed goal' ? /without reaching/ :
+    const expected = mode.startsWith('death') || mode.startsWith('disconnect') ? /Session ended or player died/ : mode.includes('timeout') ? /timed out/ : mode === 'missed goal' ? /without reaching/ :
       mode.includes('cancel') ? /goal was changed/ : /synthetic .* failure/;
     await assert.rejects(task, expected);
     assertRestored(f, before);

@@ -12,6 +12,7 @@ import { createRequire } from 'node:module';
 import { installInventoryAuthority } from '../dist/inventory-authority.js';
 import { installPlacementProvenance } from '../dist/placement-provenance.js';
 import { installInteractionTrace } from '../dist/interaction-trace.js';
+import { constrainMovements } from '../dist/movement-safety.js';
 import { equipVerified } from '../dist/verified-inventory.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -59,7 +60,7 @@ if(fixture){
  nativePluginsReady=waitForNativePlugins(bot);
  authority=installInventoryAuthority(bot);
  bot.loadPlugin(pf.pathfinder);
- bot.once('spawn',()=>{ready=true;dead=false;const m=new pf.Movements(bot);m.canDig=false;m.allow1by1towers=false;m.allowParkour=false;m.allowFreeMotion=false;m.maxDropDown=2;m.scafoldingBlocks=[];bot.pathfinder.setMovements(m);event('spawn');});
+ bot.once('spawn',()=>{ready=true;dead=false;const m=new pf.Movements(bot);constrainMovements(bot,m);bot.pathfinder.setMovements(m);event('spawn');});
  bot.on('respawn',()=>{dead=false;ready=true;event('respawn');});
  bot.on('death',()=>{dead=true;ready=false;bot.clearControlStates();event('death');});
  bot.on('health',()=>event('health',{health:bot.health,food:bot.food}));

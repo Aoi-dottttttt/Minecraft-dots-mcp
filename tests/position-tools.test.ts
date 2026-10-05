@@ -1,5 +1,6 @@
 // Modified for 2.1.0-dot.1 release (2026-10-03). See RELEASE.md.
 import test from 'ava';
+import { EventEmitter } from 'node:events';
 import sinon from 'sinon';
 import { registerPositionTools } from '../src/tools/position-tools.js';
 import { ToolFactory } from '../src/tool-factory.js';
@@ -17,7 +18,8 @@ test('registerPositionTools registers get-position tool', (t) => {
   } as unknown as BotConnection;
   const factory = new ToolFactory(mockServer, mockConnection);
   const mockBot = {} as unknown as Partial<mineflayer.Bot>;
-  const getBot = () => mockBot as mineflayer.Bot;
+  const eventBot = Object.assign(new EventEmitter(), mockBot);
+  const getBot = () => eventBot as mineflayer.Bot;
 
   registerPositionTools(factory, getBot);
 
@@ -37,7 +39,8 @@ test('registerPositionTools registers move-to-position tool', (t) => {
   } as unknown as BotConnection;
   const factory = new ToolFactory(mockServer, mockConnection);
   const mockBot = {} as unknown as Partial<mineflayer.Bot>;
-  const getBot = () => mockBot as mineflayer.Bot;
+  const eventBot = Object.assign(new EventEmitter(), mockBot);
+  const getBot = () => eventBot as mineflayer.Bot;
 
   registerPositionTools(factory, getBot);
 
@@ -62,7 +65,8 @@ test('get-position returns current bot position', async (t) => {
       position: new Vec3(100, 64, 200)
     }
   } as unknown as Partial<mineflayer.Bot>;
-  const getBot = () => mockBot as mineflayer.Bot;
+  const eventBot = Object.assign(new EventEmitter(), mockBot);
+  const getBot = () => eventBot as mineflayer.Bot;
 
   registerPositionTools(factory, getBot);
 
@@ -97,7 +101,8 @@ test('move-to-position returns error when pathfinding fails', async (t) => {
       position: new Vec3(10, 20, 30)
     }
   } as unknown as Partial<mineflayer.Bot>;
-  const getBot = () => mockBot as mineflayer.Bot;
+  const eventBot = Object.assign(new EventEmitter(), mockBot);
+  const getBot = () => eventBot as mineflayer.Bot;
 
   registerPositionTools(factory, getBot);
 
@@ -132,7 +137,8 @@ test.serial('move-to-position returns timeout error and stops pathfinder', async
       stop: sinon.stub()
     }
   } as unknown as Partial<mineflayer.Bot>;
-  const getBot = () => mockBot as mineflayer.Bot;
+  const eventBot = Object.assign(new EventEmitter(), mockBot);
+  const getBot = () => eventBot as mineflayer.Bot;
 
   registerPositionTools(factory, getBot);
 
@@ -168,7 +174,8 @@ test('move-to-position succeeds without timeout and does not stop pathfinder', a
       stop: sinon.stub()
     }
   } as unknown as Partial<mineflayer.Bot>;
-  const getBot = () => mockBot as mineflayer.Bot;
+  const eventBot = Object.assign(new EventEmitter(), mockBot);
+  const getBot = () => eventBot as mineflayer.Bot;
 
   registerPositionTools(factory, getBot);
 
@@ -204,7 +211,8 @@ test.serial('move-to-position succeeds before timeout and does not stop pathfind
       stop: sinon.stub()
     }
   } as unknown as Partial<mineflayer.Bot>;
-  const getBot = () => mockBot as mineflayer.Bot;
+  const eventBot = Object.assign(new EventEmitter(), mockBot);
+  const getBot = () => eventBot as mineflayer.Bot;
 
   registerPositionTools(factory, getBot);
 
@@ -237,7 +245,8 @@ test('move-to-position preserves pathfinder error when not timing out', async (t
       stop: sinon.stub()
     }
   } as unknown as Partial<mineflayer.Bot>;
-  const getBot = () => mockBot as mineflayer.Bot;
+  const eventBot = Object.assign(new EventEmitter(), mockBot);
+  const getBot = () => eventBot as mineflayer.Bot;
 
   registerPositionTools(factory, getBot);
 
