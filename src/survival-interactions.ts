@@ -12,6 +12,7 @@ import { Vec3 } from 'vec3';
 import { getInventoryAuthority, type ServerItem } from './inventory-authority.js';
 import { equipVerified } from './verified-inventory.js';
 import { withServerBlockConfirmation } from './tools/block-confirmation.js';
+import { placementProvenance } from './placement-provenance.js';
 
 const require = createRequire(import.meta.url);
 export type Point = { x: number; y: number; z: number };
@@ -110,7 +111,7 @@ export async function selectInteractionItem(bot: Bot, selection: ItemSelection, 
   if (!chosen || (selection.itemName && chosen.name !== selection.itemName)) throw new Error('Selected authoritative inventory slot does not contain the requested item');
   if (slot !== target || !offHand) {
     if (slot === 45 && !offHand) throw new Error('Move the off-hand item to a storage slot before selecting it in the main hand');
-    if (slot !== 45) await equipVerified(bot, slot, offHand ? 'off-hand' : 'hand', timeout(options), { exactSource: selection.inventorySlot !== undefined || !selection.itemName });
+    if (slot !== 45) await equipVerified(bot, slot, offHand ? 'off-hand' : 'hand', timeout(options), { exactSource: selection.inventorySlot !== undefined || !selection.itemName, signal: options.signal });
   }
   assertActive(bot, options);
   return chosen;
@@ -118,7 +119,7 @@ export async function selectInteractionItem(bot: Bot, selection: ItemSelection, 
 
 /** Force the initial look so activateBlock's internal look cannot await disabled physics.
  * Revalidate after this async boundary before Mineflayer issues its public action. */
-async function activateSafely(bot: Bot, block: Block, direction: Vec3, cursor: Vec3, options: InteractionOptions): Promise<void> {
+async function activateSafely(bot: Bot, block: Block, direction: Vec3, cursor: Vec3, options: InteractionOptions, beforeIssue?: () => void): Promise<void> {
   const handSlot = 36 + bot.quickBarSlot;
   if (getInventoryAuthority(bot).getFrame(0).slots[handSlot]) await selectInteractionItem(bot, { inventorySlot: handSlot }, false, options);
   await bot.lookAt(block.position.offset(0.5, 0.5, 0.5), true);
@@ -127,6 +128,7 @@ async function activateSafely(bot: Bot, block: Block, direction: Vec3, cursor: V
   if (current.stateId !== block.stateId) throw new Error('Target changed before interaction; inspect before retrying');
   const face = (Object.keys(faceVectors) as BlockFace[]).find(key => faceVectors[key].equals(direction))!;
   clickGeometry(bot, current, face, cursor);
+  beforeIssue?.();
   await bot.activateBlock(current, direction, cursor);
 }
 
@@ -182,7 +184,20 @@ export async function useItemOnBlockVerified(bot: Bot, point: Point, options: Bl
   if (options.expect && expectedPosition) {
     const before = blockAt(bot, expectedPosition);
     if (isMatching(before, options.expect)) throw new Error('Expected block effect already exists; choose a changed property or inspect before retrying');
-    return blockAction(bot, expectedPosition, next => isMatching(next, options.expect!), () => activateSafely(bot, block, direction, cursor, options), options);
+    // A block expectation can describe unrelated effects (buttons, crops, etc).
+    // Only an adjacent placement of the held block may establish our source.
+    const placement = expectedPosition.equals(block.position.plus(direction)) && options.expect.name
+      ? placementProvenance(bot)?.begin(expectedPosition, options.expect.name) : null;
+    const deadline = Date.now() + timeout(options);
+    try {
+      const outcome = await blockAction(bot, expectedPosition, next => isMatching(next, options.expect!), () => activateSafely(bot, block, direction, cursor, options, () => placement?.arm()), options);
+      if (placement && outcome.confirmed) {
+        outcome.placementRecorded = await placement.confirm(Math.max(1, deadline - Date.now()), options.signal);
+        options.signal?.throwIfAborted();
+        if (outcome.placementRecorded) outcome.evidence.push('session-local placement with exact server inventory debit');
+      }
+      return outcome;
+    } finally { placement?.dispose(); }
   }
   await activateSafely(bot, block, direction, cursor, options);
   options.signal?.throwIfAborted();

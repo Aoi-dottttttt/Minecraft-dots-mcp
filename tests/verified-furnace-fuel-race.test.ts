@@ -27,7 +27,8 @@ function fixture({ type = 'minecraft:furnace', fuel = 'coal', race = 'second', f
   let remoteSlots = s.slots.map(copy);
   let remoteCursor: Stack = null;
   let fuelClicks = 0;
-  const duration = type === 'minecraft:furnace' ? 1600 : 800;
+  const fuelDuration = fuel === 'birch_planks' ? 300 : 1600;
+  const duration = type === 'minecraft:furnace' ? fuelDuration : fuelDuration / 2;
   const properties = [0, 0, fault === 'stale_progress' ? 1 : 0, type === 'minecraft:furnace' ? 200 : 100];
   const remoteProperties = [...properties];
   const property = (key: number, value: number, windowId = 7) => s.bot._client.emit('craft_progress_bar', { windowId, property: key, value });
@@ -130,7 +131,7 @@ function fixture({ type = 'minecraft:furnace', fuel = 'coal', race = 'second', f
 }
 
 for (const type of ['minecraft:furnace', 'minecraft:smoker', 'minecraft:blast_furnace']) {
-  for (const fuel of ['coal', 'charcoal']) {
+  for (const fuel of ['coal', 'charcoal', ...(type === 'minecraft:furnace' ? ['birch_planks'] : [])]) {
     test(`${type} ${fuel}: suppressed unchanged target is proved by cursor then burn properties`, async t => {
       const s = fixture({ type, fuel });
       const result = await s.run();
@@ -209,3 +210,32 @@ test('pre-cancelled furnace transfer submits nothing', async t => {
   await t.throwsAsync(transferWindowVerified(s.bot, { sourceSlots: [4], destinationSlots: [1], count: 4, signal: s.controller.signal }));
   t.is(s.writes.length, 0); t.is(s.authority.fence, null);
 });
+
+for (const variant of [{ propertiesFirst: true }, { fullFirstFuel: true }, { race: 'first' as const }, { race: 'between' as const }, { race: 'reported' as const }]) {
+  test(`birch plank burn ordering ${JSON.stringify(variant)} accounts for exactly one consumed fuel`, async t => {
+    const s = fixture({ fuel: 'birch_planks', ...variant }); const result = await s.run();
+    t.is(result.transferred, 4); t.is(result.window.slots[1].item?.count, 3);
+    t.is(result.window.slots[4].item?.count, 1); t.is(result.window.cursor, null); t.is(s.authority.fence, null);
+  });
+}
+
+for (const fault of ['reject', 'missing_cursor', 'wrong_cursor_count', 'wrong_cursor_item', 'wrong_cursor_components', 'wrong_fuel', 'wrong_fuel_components', 'unrelated_loss', 'source_change', 'invalid_duration', 'invalid_progress', 'invalid_burn', 'stale_progress', 'missing_properties', 'stale_properties', 'wrong_window_properties', 'repeat_loss', 'window', 'death', 'cancel'] as const) {
+  test(`birch plank race remains fenced for ${fault}`, async t => {
+    const s = fixture({ fuel: 'birch_planks', fault });
+    await t.throwsAsync(s.run()); t.truthy(s.authority.fence);
+    t.is(s.fuelClicks(), fault === 'repeat_loss' ? 3 : 2);
+    const writes = s.writes.length; await new Promise(resolve => setImmediate(resolve)); t.is(s.writes.length, writes);
+  });
+}
+
+for (const fuel of ['crimson_planks', 'warped_planks']) {
+  test(`${fuel} does not inherit birch plank consumption evidence`, async t => {
+    const s = fixture({ fuel }); await t.throwsAsync(s.run()); t.truthy(s.authority.fence); t.is(s.fuelClicks(), 2);
+  });
+}
+
+for (const type of ['minecraft:smoker', 'minecraft:blast_furnace']) {
+  test(`${type} birch plank burn stays on the strict path`, async t => {
+    const s = fixture({ type, fuel: 'birch_planks' }); await t.throwsAsync(s.run()); t.truthy(s.authority.fence); t.is(s.fuelClicks(), 2);
+  });
+}

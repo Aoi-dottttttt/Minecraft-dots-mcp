@@ -10,7 +10,7 @@ import { closeWindowVerified, furnaceActionVerified, FURNACE_WINDOW_TYPES, openW
 
 const FURNACE_BLOCKS = new Set(['furnace', 'blast_furnace', 'smoker']);
 
-export function registerFurnaceTools(factory: ToolFactory, getBot: () => mineflayer.Bot): void {
+export function registerFurnaceTools(factory: ToolFactory, getBot: () => mineflayer.Bot, getOptions: () => { signal?: AbortSignal } = () => ({})): void {
   factory.registerTool(
     "smelt-item",
     "Smelt items using a furnace-like block",
@@ -49,6 +49,8 @@ export function registerFurnaceTools(factory: ToolFactory, getBot: () => minefla
       ({ x, y, z } = coerceCoordinates(x, y, z));
 
       const bot = getBot();
+      const options = getOptions();
+      options.signal?.throwIfAborted();
 
       const furnacePos = new Vec3(x, y, z);
       const furnaceBlock = bot.blockAt(furnacePos);
@@ -79,10 +81,11 @@ export function registerFurnaceTools(factory: ToolFactory, getBot: () => minefla
       const availableFuel = authority.count(fuel.type, fuel.metadata);
       if (availableInput < inputCount || availableFuel < fuelCount || (input.type === fuel.type && input.metadata === fuel.metadata && availableInput < inputCount + fuelCount)) throw new Error('Not enough authoritative inventory for the requested input and fuel counts combined; no materials deposited');
 
-      const furnace = await openWindowVerified(bot, furnaceBlock, { expectedTypes: FURNACE_WINDOW_TYPES });
+      const furnace = await openWindowVerified(bot, furnaceBlock, { expectedTypes: FURNACE_WINDOW_TYPES, ...options });
       let mutationStarted = false;
 
       try {
+        options.signal?.throwIfAborted();
         const frame = authority.getFrame(furnace.id);
         const existingInput = frame.slots[0];
         if (existingInput && existingInput.name !== input.name) {
@@ -95,8 +98,8 @@ export function registerFurnaceTools(factory: ToolFactory, getBot: () => minefla
         }
 
         mutationStarted = true;
-        await furnaceActionVerified(bot, { slot: 'fuel', op: 'put', itemType: fuel.type, count: resolvedFuelCount });
-        await furnaceActionVerified(bot, { slot: 'input', op: 'put', itemType: input.type, count: resolvedInputCount });
+        await furnaceActionVerified(bot, { slot: 'fuel', op: 'put', itemType: fuel.type, count: resolvedFuelCount, ...options });
+        await furnaceActionVerified(bot, { slot: 'input', op: 'put', itemType: input.type, count: resolvedInputCount, ...options });
 
         if (!takeOutput) {
           return factory.createResponse(
@@ -105,19 +108,19 @@ export function registerFurnaceTools(factory: ToolFactory, getBot: () => minefla
         }
 
         try {
-          await authority.waitFor(() => { if (bot.currentWindow !== furnace || authority.frames.get(furnace.id) !== frame) throw new Error('Furnace window changed while waiting for output'); return !!frame.slots[2]; }, timeoutMs, 'furnace output');
+          await authority.waitFor(() => { options.signal?.throwIfAborted(); if (bot.currentWindow !== furnace || authority.frames.get(furnace.id) !== frame) throw new Error('Furnace window changed while waiting for output'); return !!frame.slots[2]; }, timeoutMs, 'furnace output', options.signal);
         } catch (error) {
           if (authority.ended || authority.fence || bot.currentWindow !== furnace || !(error instanceof Error) || !error.message.startsWith('Server confirmation timed out:')) throw error;
           return factory.createResponse(`Input and fuel deposits confirmed, but no output after ${timeoutMs}ms. Materials remain in the furnace; do not repeat the deposit to check progress.`);
         }
         const output = frame.slots[2]!;
-        await furnaceActionVerified(bot, { slot: 'output', op: 'take', count: output.count });
+        await furnaceActionVerified(bot, { slot: 'output', op: 'take', count: output.count, ...options });
         return factory.createResponse(`Server-confirmed collection: ${output.count} ${output.name}. This may include previously smelted output; remaining input: ${frame.slots[0]?.count ?? 0}.`);
       } catch (error) {
         if (mutationStarted) authority.block('Furnace transfer was not fully confirmed; inspect inventory and the open furnace before retrying');
         throw error;
       } finally {
-        if (!authority.fence && !authority.cursor && bot.currentWindow === furnace) await closeWindowVerified(bot);
+        if (!options.signal?.aborted && !authority.fence && !authority.cursor && bot.currentWindow === furnace) await closeWindowVerified(bot);
       }
     }
   );

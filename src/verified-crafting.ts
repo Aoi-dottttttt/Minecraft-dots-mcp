@@ -8,8 +8,9 @@ type Placement = { slot: number; ingredient: Ingredient };
 const matches = (item: ServerItem | null, ingredient: Ingredient) => !!item && item.type === ingredient.id && (ingredient.metadata == null || item.metadata === ingredient.metadata);
 
 /** Craft using actual server slot/cursor packets. Mineflayer craft() is intentionally not used. */
-export async function craftVerified(bot: mineflayer.Bot, recipe: VerifiedRecipe, table?: Parameters<mineflayer.Bot['craft']>[2], timeoutMs = 5000): Promise<{ outputCount: number; itemName: string }> {
+export async function craftVerified(bot: mineflayer.Bot, recipe: VerifiedRecipe, table?: Parameters<mineflayer.Bot['craft']>[2], timeoutMs = 5000, options: { signal?: AbortSignal } = {}): Promise<{ outputCount: number; itemName: string }> {
   const authority = getInventoryAuthority(bot);
+  options.signal?.throwIfAborted();
   authority.assertMutationReady();
   if (!bot.supportFeature('stateIdUsed') || bot.registry.version.version !== 767) throw new Error('Verified crafting currently requires Java 1.21.1 / protocol 767; other click formats have not been validated');
   if (bot.currentWindow) throw new Error('Close the current container before crafting');
@@ -49,8 +50,9 @@ export async function craftVerified(bot: mineflayer.Bot, recipe: VerifiedRecipe,
   let resultTaken = false;
   let outputBoundary = 0;
   const deadline = Date.now() + 90_000;
-  const wait = (predicate: () => boolean, description: string) => authority.waitFor(predicate, Math.max(1, Math.min(timeoutMs, deadline - Date.now())), description);
+  const wait = (predicate: () => boolean, description: string) => authority.waitFor(() => { options.signal?.throwIfAborted(); return predicate(); }, Math.max(1, Math.min(timeoutMs, deadline - Date.now())), description, options.signal);
   const click = async (slot: number, button: number, expected: () => boolean, description: string) => {
+    options.signal?.throwIfAborted();
     authority.assertMutationReady();
     if (Date.now() >= deadline) throw new Error('Craft action deadline reached before the next click');
     if ((bot.currentWindow?.id ?? 0) !== frame.id) throw new Error('Crafting window changed unexpectedly');
@@ -60,7 +62,8 @@ export async function craftVerified(bot: mineflayer.Bot, recipe: VerifiedRecipe,
     // Vanilla broadcast authoritative corrections. The tracked state ID is per window.
     mutationStarted = true;
     try { bot._client.write('window_click', { windowId: frame.id, stateId: frame.stateId, slot, mouseButton: button, mode: 0, changedSlots: [], cursorItem: authority.raw(cursorBefore) });
-      await wait(() => authority.sequence > sequence && expected(), description); }
+      await wait(() => authority.sequence > sequence && expected(), description);
+      options.signal?.throwIfAborted(); }
     catch (error) {
       authority.block(`Unconfirmed inventory click (${description}); materials may be on the cursor or crafting grid`);
       throw error;
@@ -92,6 +95,7 @@ export async function craftVerified(bot: mineflayer.Bot, recipe: VerifiedRecipe,
   };
 
   try {
+    options.signal?.throwIfAborted();
     if (table) {
       const position = table.position;
       if (!position || position.distanceTo(bot.entity.position) > 4.5) throw new Error('Crafting table is outside safe interaction reach (4.5 blocks); no interaction or inventory click was sent');
@@ -107,7 +111,7 @@ export async function craftVerified(bot: mineflayer.Bot, recipe: VerifiedRecipe,
       // lookAt. Consume rejection immediately, but still await activation itself:
       // releasing the lane early could permit its eventual packet to race a new action.
       void windowPromise.catch(() => {});
-      try { await bot.activateBlock(currentTable); await windowPromise; }
+      try { options.signal?.throwIfAborted(); await bot.activateBlock(currentTable); await windowPromise; options.signal?.throwIfAborted(); }
       catch (error) { authority.block('Crafting-table opening request was not confirmed; no inventory click was sent, but a late window may still arrive'); throw error; }
       frame = authority.getFrame(bot.currentWindow!.id);
       opened = true;
@@ -141,10 +145,14 @@ export async function craftVerified(bot: mineflayer.Bot, recipe: VerifiedRecipe,
     await recoverGrid();
     if (authority.cursor || frame.slots.slice(1, width * width + 1).some(Boolean)) throw new Error('Crafting cleanup is incomplete');
     verifyDeltas(before, authority.items(), deltas, itemKey);
+    options.signal?.throwIfAborted();
     if (opened) bot.closeWindow(bot.currentWindow!);
     return { outputCount: recipe.result.count, itemName: result.name };
   } catch (error) {
     let recovery = '';
+    // Cancellation revokes permission for every subsequent click, including
+    // recovery. Keep already-submitted inventory changes visible and fenced.
+    if (options.signal?.aborted && mutationStarted) authority.block('Crafting was cancelled after an inventory click; do not recover or repeat automatically');
     if (!authority.fence && mutationStarted && !resultTaken) {
       try { await recoverGrid(); verifyDeltas(before, authority.items(), new Map(), itemKey); recovery = '; all input materials recovered'; }
       catch (cleanupError) { authority.block(`Craft cleanup was not confirmed: ${(cleanupError as Error).message}`); recovery = '; recovery uncertain; further actions locked'; }

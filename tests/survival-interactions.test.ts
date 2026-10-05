@@ -7,6 +7,8 @@ import type { Entity } from 'prismarine-entity';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { BotConnection } from '../src/bot-connection.js';
 import { ToolFactory } from '../src/tool-factory.js';
+import { registerBlockTools } from '../src/tools/block-tools.js';
+import { installPlacementProvenance } from '../src/placement-provenance.js';
 import { equipVerified } from '../src/verified-inventory.js';
 import { inventoryFixture } from './helpers/inventory-fixture.js';
 import { registerInteractionTools } from '../src/tools/interaction-tools.js';
@@ -343,3 +345,136 @@ test('server attachment correction prevents an optimistic mount result', async t
   });
   t.false((await mountVerified(bot, boat.id, { timeoutMs: 5 })).confirmed);
 });
+
+function placementFixture() {
+  const s = fixture([{ name: 'stone_brick_wall', count: 4, slot: 36 }]);
+  const support = s.setBlock('stone', {}, new Vec3(1, 63, 0));
+  const target = support.position.offset(0, 1, 0);
+  const ledger = installPlacementProvenance(s.bot);
+  const decrement = () => { s.slots[36] = { ...s.slots[36], count: 3 }; s.sync(); };
+  const place = () => s.serverBlock(s.makeBlock('stone_brick_wall', {}, target));
+  const run = (extra = {}) => useItemOnBlockVerified(s.bot, support.position, { expect: { position: target, name: 'stone_brick_wall' }, timeoutMs: 30, ...extra });
+  return { ...s, support, target, ledger, decrement, place, run };
+}
+
+test('generic verified wall placement records the same source used by guarded mining', async t => {
+  const s = placementFixture();
+  (s.bot.activateBlock as sinon.SinonStub).callsFake(async () => { s.place(); s.decrement(); });
+  const result = await s.run();
+  t.true(result.confirmed); t.true(s.ledger.has(s.target));
+  t.deepEqual(s.ledger.entries(), [[s.target.toString(), 'stone_brick_wall']]);
+});
+
+for (const order of ['inventory-first', 'block-first', 'delayed-inventory'] as const) {
+  test(`wall provenance accepts raw proof with ${order}`, async t => {
+    const s = placementFixture();
+    (s.bot.activateBlock as sinon.SinonStub).callsFake(async () => {
+      if (order === 'inventory-first') { s.decrement(); s.place(); }
+      else { s.place(); if (order === 'delayed-inventory') setImmediate(s.decrement); else s.decrement(); }
+    });
+    const result = await s.run(); t.true(result.confirmed); t.true(result.placementRecorded); t.true(s.ledger.has(s.target));
+    t.is(s.authority.listenerCount('change'), 0); t.is(s.ledger.listenerCount('block'), 0); t.is(s.ledger.listenerCount('invalidate'), 0);
+  });
+}
+
+for (const fault of ['no-inventory', 'no-block-packet', 'optimistic-block', 'wrong-debit', 'wrong-item', 'unrelated-slot', 'debit-then-repair', 'unrelated-slot-then-repair', 'cursor', 'dimension', 'unload'] as const) {
+  test(`wall provenance rejects ${fault} without granting another mining permission`, async t => {
+    const s = placementFixture();
+    (s.bot.activateBlock as sinon.SinonStub).callsFake(async () => {
+      if (fault === 'optimistic-block') {
+        const old = s.bot.blockAt(s.target); const placed = s.setBlock('stone_brick_wall', {}, s.target); s.bot.emit('blockUpdate', old, placed);
+      } else if (fault !== 'no-block-packet') s.place();
+      if (fault !== 'no-inventory') {
+        if (fault === 'wrong-debit' || fault === 'debit-then-repair') { s.slots[36] = { ...s.slots[36], count: 2 }; s.sync(); }
+        else if (fault === 'wrong-item') { s.slots[36] = { ...s.slots[36], type: s.bot.registry.itemsByName.oak_planks.id, count: 3 }; s.sync(); }
+        else s.decrement();
+      }
+      if (fault === 'unrelated-slot' || fault === 'unrelated-slot-then-repair') { s.slots[9] = { ...s.slots[36], count: 1 }; s.sync(); if (fault.endsWith('repair')) { s.slots[9] = null; s.sync(); } }
+      if (fault === 'debit-then-repair') s.decrement();
+      if (fault === 'cursor') s.bot._client.emit('set_slot', { windowId: 255, slot: -1, stateId: 9, item: s.authority.raw({ ...s.authority.getFrame(0).slots[36]!, count: 1 }) });
+      if (fault === 'dimension') s.bot.game.dimension = 'the_nether';
+      if (fault === 'unload') s.bot._client.emit('unload_chunk', { chunkX: 0, chunkZ: 0 });
+    });
+    await s.run(); t.false(s.ledger.has(s.target)); t.deepEqual(s.ledger.entries(), []);
+    t.is(s.authority.fence, null); t.is(s.authority.listenerCount('change'), 0); t.is(s.ledger.listenerCount('block'), 0);
+  });
+}
+
+test('an already present wall cannot become ours through a state change', async t => {
+  const s = placementFixture(); s.setBlock('stone_brick_wall', {}, s.target);
+  (s.bot.activateBlock as sinon.SinonStub).callsFake(async () => { s.serverBlock(s.makeBlock('stone_brick_wall', { east: 'low' }, s.target)); s.decrement(); });
+  const outcome = await s.run({ expect: { position: s.target, name: 'stone_brick_wall', properties: { east: 'low' } } });
+  t.true(outcome.confirmed); t.false(s.ledger.has(s.target));
+});
+
+test('caller expectation cannot claim a remote neighboring block or a different held material', async t => {
+  for (const mode of ['remote', 'wrong-held']) {
+    const s = placementFixture(); const target = mode === 'remote' ? s.target.offset(1, 0, 0) : s.target;
+    if (mode === 'wrong-held') { s.slots[36].type = s.bot.registry.itemsByName.oak_planks.id; s.sync(); }
+    (s.bot.activateBlock as sinon.SinonStub).callsFake(async () => { s.serverBlock(s.makeBlock('stone_brick_wall', {}, target)); s.decrement(); });
+    const outcome = await s.run({ expect: { position: target, name: 'stone_brick_wall' } });
+    t.true(outcome.confirmed); t.false(s.ledger.has(target));
+  }
+});
+
+for (const invalidation of ['air-then-same-wall', 'different-material', 'dimension', 'respawn', 'end', 'chunk-unload', 'chunk-replacement', 'multi-block-change'] as const) {
+  test(`confirmed wall source expires on ${invalidation}`, async t => {
+    const s = placementFixture(); (s.bot.activateBlock as sinon.SinonStub).callsFake(async () => { s.place(); s.decrement(); });
+    await s.run(); t.true(s.ledger.has(s.target));
+    switch (invalidation) {
+      case 'air-then-same-wall': s.serverBlock(s.makeBlock('air', {}, s.target)); s.place(); break;
+      case 'different-material': s.serverBlock(s.makeBlock('oak_planks', {}, s.target)); break;
+      case 'dimension': s.bot.game.dimension = 'the_nether'; break;
+      case 'respawn': s.bot._client.emit('respawn'); break;
+      case 'end': s.bot.emit('end', 'synthetic disconnect'); break;
+      case 'chunk-unload': s.bot._client.emit('unload_chunk', { chunkX: 0, chunkZ: 0 }); break;
+      case 'chunk-replacement': s.bot._client.emit('map_chunk', { x: 0, z: 0 }); break;
+      case 'multi-block-change': s.bot._client.emit('multi_block_change', { chunkCoordinates: { x: 0, y: 4, z: 0 }, records: [(s.bot.registry.blocksByName.air.minStateId << 12) | 256] }); break;
+    }
+    t.false(s.ledger.has(s.target));
+  });
+}
+
+test('wall connection-state updates and unrelated chunks preserve continuously observed source', async t => {
+  const s = placementFixture(); (s.bot.activateBlock as sinon.SinonStub).callsFake(async () => { s.place(); s.decrement(); });
+  await s.run(); s.serverBlock(s.makeBlock('stone_brick_wall', { east: 'low' }, s.target));
+  s.bot._client.emit('map_chunk', { x: 8, z: 8 }); s.bot._client.emit('unload_chunk', { chunkX: 9, chunkZ: 9 });
+  t.true(s.ledger.has(s.target));
+});
+
+test('cancelled placement keeps listeners bounded and does not authorize the placed block', async t => {
+  const s = placementFixture(); const controller = new AbortController();
+  (s.bot.activateBlock as sinon.SinonStub).callsFake(async () => { s.place(); s.decrement(); controller.abort(); });
+  await t.throwsAsync(s.run({ signal: controller.signal })); t.false(s.ledger.has(s.target));
+  t.is(s.authority.listenerCount('change'), 0); t.is(s.ledger.listenerCount('block'), 0); t.is(s.ledger.listenerCount('invalidate'), 0);
+});
+
+test('legacy place-block also records independently confirmed source without parsing success text', async t => {
+  const s = placementFixture(); const server = { tool: sinon.stub() } as unknown as McpServer;
+  const factory = new ToolFactory(server, { checkConnectionAndReconnect: async () => ({ connected: true }) } as BotConnection);
+  Object.defineProperty(s.bot, 'heldItem', { get: () => s.authority.getFrame(0).slots[36] });
+  s.bot.placeBlock = async () => { s.place(); s.decrement(); };
+  registerBlockTools(factory, () => s.bot);
+  const call = (server.tool as sinon.SinonStub).getCalls().find(call => call.args[0] === 'place-block')!.args[3];
+  const outcome = await call(s.target); t.falsy(outcome.isError); t.true(s.ledger.has(s.target));
+});
+
+test('a matching block update before the actual block-use call cannot grant placement provenance', async t => {
+  const s = placementFixture();
+  (s.bot.lookAt as sinon.SinonStub).callsFake(async () => { s.place(); s.decrement(); });
+  const outcome = await s.run();
+  t.true(outcome.confirmed); t.false(outcome.placementRecorded); t.false(s.ledger.has(s.target));
+});
+
+for (const repeatDebit of [false, true]) {
+  test(`an exact placement debit followed by a refund cannot be reused (repeat debit: ${repeatDebit})`, async t => {
+    const s = placementFixture();
+    (s.bot.activateBlock as sinon.SinonStub).callsFake(async () => {
+      s.place(); s.decrement();
+      s.slots[36] = { ...s.slots[36], count: 4 }; s.sync();
+      if (repeatDebit) s.decrement();
+    });
+    const outcome = await s.run();
+    t.true(outcome.confirmed); t.false(outcome.placementRecorded); t.false(s.ledger.has(s.target));
+  });
+}

@@ -9,7 +9,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { IPC_VERSION, MAX_FRAME_BYTES, readDaemonSession, validateSocketPath, encodeFrame } from './minecraft-ipc.mjs';
 
-export const FRONTEND_VERSION = '3.1.1-rc.1';
+export const FRONTEND_VERSION = '3.1.1-rc.2';
 const { values } = parseArgs({ options: { attach: { type: 'string' } }, strict: true });
 if (!values.attach) throw Error('An existing private --attach daemon directory is required; this frontend never starts a game');
 const expectedSession = readDaemonSession(values.attach);

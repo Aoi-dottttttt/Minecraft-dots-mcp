@@ -27,7 +27,10 @@ function guard(name: string | null, position = new Vec3(0.5, 64, 0.5)) {
   const end = source.indexOf('for(const register of', start);
   if (start < 0 || end < 0) throw new Error('Native wrapper boundaries changed; fixture needs review');
   const wrapped = runInNewContext(source.slice(start, end) + '\nwrapped;', {
-    Vec3, ownBlocks,
+    Vec3, ownBlocks: { has: (point: Vec3) => ownBlocks.get(point.toString()) === name, forget: (point: Vec3) => ownBlocks.delete(point.toString()) },
+    // This fixture isolates the native block policy; cancellation and the real
+    // shared action context are exercised by review-capability-gaps.test.ts.
+    readTools: new Set(), complete: { runAction: async (operation: () => Promise<Response>) => operation() },
     bot: { entity: { position }, blockAt: () => name === null ? null : { name } },
     factory: { createResponse: response, createErrorResponse: response, registerTool(tool: string, _description: string, _schema: object, executor: (args: Args) => Promise<Response>) { registered.set(tool, executor); } }
   }, { timeout: 1000 }) as { registerTool(tool: string, description: string, schema: object, executor: (args: Args) => Promise<Response>): void };

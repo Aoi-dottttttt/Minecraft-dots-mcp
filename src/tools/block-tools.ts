@@ -9,6 +9,7 @@ import { ToolFactory } from '../tool-factory.js';
 import { coerceCoordinates } from './coordinate-utils.js';
 import { moveAndVerify } from './movement-utils.js';
 import { withServerBlockConfirmation } from './block-confirmation.js';
+import { placementProvenance } from '../placement-provenance.js';
 
 type FaceDirection = 'up' | 'down' | 'north' | 'south' | 'east' | 'west';
 const MAX_FIND_BLOCKS_COUNT = 256;
@@ -18,7 +19,7 @@ interface FaceOption {
   vector: Vec3;
 }
 
-export function registerBlockTools(factory: ToolFactory, getBot: () => mineflayer.Bot): void {
+export function registerBlockTools(factory: ToolFactory, getBot: () => mineflayer.Bot, getOptions: () => { signal?: AbortSignal } = () => ({})): void {
   factory.registerTool(
     "place-block",
     "Place a block at the specified position",
@@ -32,6 +33,8 @@ export function registerBlockTools(factory: ToolFactory, getBot: () => mineflaye
       ({ x, y, z } = coerceCoordinates(x, y, z));
 
       const bot = getBot();
+      const options = getOptions();
+      options.signal?.throwIfAborted();
       const placePos = new Vec3(x, y, z).floored();
       ({ x, y, z } = placePos);
 
@@ -68,6 +71,7 @@ export function registerBlockTools(factory: ToolFactory, getBot: () => mineflaye
       }
 
       for (const face of possibleFaces) {
+        options.signal?.throwIfAborted();
         const referencePos = placePos.plus(face.vector);
         const referenceBlock = bot.blockAt(referencePos);
 
@@ -75,6 +79,7 @@ export function registerBlockTools(factory: ToolFactory, getBot: () => mineflaye
           if (!bot.canSeeBlock(referenceBlock)) {
             const goal = new goals.GoalNear(referencePos.x, referencePos.y, referencePos.z, 2);
             await moveAndVerify(bot, goal);
+            options.signal?.throwIfAborted();
           }
 
           // Navigation can change both player and world state. Recheck before
@@ -91,11 +96,20 @@ export function registerBlockTools(factory: ToolFactory, getBot: () => mineflaye
             throw new Error('Held item changed during navigation; placement cancelled');
           }
           await bot.lookAt(placePos, true);
+          options.signal?.throwIfAborted();
+          const placement = placementProvenance(bot)?.begin(placePos, held.name);
+          const deadline = Date.now() + 3000;
           try {
-            await withServerBlockConfirmation(bot, placePos, stateId => bot.registry.blocksByStateId[stateId]?.id === expectedBlock.id, () => bot.placeBlock(referenceBlock, face.vector.scaled(-1)));
+            await withServerBlockConfirmation(bot, placePos, stateId => bot.registry.blocksByStateId[stateId]?.id === expectedBlock.id, () => {
+              options.signal?.throwIfAborted();
+              placement?.arm();
+              return bot.placeBlock(referenceBlock, face.vector.scaled(-1));
+            });
+            await placement?.confirm(Math.max(1, deadline - Date.now()), options.signal);
+            options.signal?.throwIfAborted();
           } catch (error) {
             throw new Error(`Placement was not confirmed; inspect the target before retrying: ${error instanceof Error ? error.message : String(error)}`);
-          }
+          } finally { placement?.dispose(); }
           const placed = bot.blockAt(placePos);
           if (!placed || placed.type !== expectedBlock.id) {
             throw new Error('Expected block was not observed at target after placement; no retry performed');
@@ -120,6 +134,8 @@ export function registerBlockTools(factory: ToolFactory, getBot: () => mineflaye
       ({ x, y, z } = coerceCoordinates(x, y, z));
 
       const bot = getBot();
+      const options = getOptions();
+      options.signal?.throwIfAborted();
       const blockPos = new Vec3(x, y, z);
       const block = bot.blockAt(blockPos);
 
@@ -130,6 +146,7 @@ export function registerBlockTools(factory: ToolFactory, getBot: () => mineflaye
       if (!bot.canDigBlock(block) || !bot.canSeeBlock(block)) {
         const goal = new goals.GoalNear(x, y, z, 2);
         await moveAndVerify(bot, goal);
+        options.signal?.throwIfAborted();
       }
 
       const currentBlock = bot.blockAt(blockPos);
@@ -142,7 +159,8 @@ export function registerBlockTools(factory: ToolFactory, getBot: () => mineflaye
       await withServerBlockConfirmation(bot, blockPos.floored(), stateId => {
         const type = bot.registry.blocksByStateId[stateId]?.id;
         return type !== undefined && type !== currentBlock.type;
-      }, () => bot.dig(currentBlock));
+      }, () => { options.signal?.throwIfAborted(); return bot.dig(currentBlock); });
+      options.signal?.throwIfAborted();
       const after = bot.blockAt(blockPos);
       if (!after || after.type === currentBlock.type) {
         throw new Error('Target block removal was not observed; digging not confirmed');

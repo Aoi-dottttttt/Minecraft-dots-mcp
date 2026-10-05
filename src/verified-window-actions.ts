@@ -108,7 +108,8 @@ class WindowTracker extends EventEmitter {
 /** One action's conservation ledger, never a reusable permission to lose fuel.
  * Vanilla 1.21.1 can consume a fuel between clicks and suppress an unchanged fuel
  * slot packet. Its fresh burn transition and exact cursor debit then account for
- * that one item. Keep other fuels/remainders and re-ignition on the strict path.
+ * that one item. Only coal/charcoal and ordinary-furnace birch planks have
+ * reviewed duration mappings; other fuels/remainders and re-ignition stay strict.
  */
 class FurnaceFuelEvidence {
   private readonly initialFuel: ServerItem | null;
@@ -146,7 +147,7 @@ class FurnaceFuelEvidence {
 
   deposit(slot: number, before: ServerItem | null, cursor: ServerItem | null, after: { slot: ServerItem | null; cursor: ServerItem | null }): number {
     const authority = this.ctx.authority;
-    if (slot !== 1 || !cursor || !['coal', 'charcoal'].includes(cursor.name)) return 0;
+    if (slot !== 1 || !cursor || !this.duration(cursor.name)) return 0;
     const amount = cursor.count - (after.cursor?.count ?? 0);
     if (!Number.isInteger(amount) || amount <= 0 || (before && !authority.same(before, cursor, false)) ||
       !authority.same(after.cursor, counted(cursor, cursor.count - amount)) ||
@@ -156,11 +157,19 @@ class FurnaceFuelEvidence {
     return amount;
   }
 
+  private duration(name: string): number {
+    const ordinary = String(this.ctx.window?.type) === 'minecraft:furnace';
+    if (name === 'coal' || name === 'charcoal') return ordinary ? 1600 : 800;
+    // Deliberately exact: Nether planks are nonflammable, and other fuel
+    // durations/remainders need their own reviewed proof and regression.
+    return ordinary && name === 'birch_planks' ? 300 : 0;
+  }
+
   confirms(amount: number, before: ServerItem | null, after: ServerItem | null, sequence: number): boolean {
-    const { authority, frame, tracker, window } = this.ctx;
+    const { authority, frame, tracker } = this.ctx;
     if (!amount || !this.fuel || this.invalid || !this.initiallyUnlit || !this.burnStarted) return false;
     const properties = tracker.properties.get(frame.id);
-    const duration = String(window?.type) === 'minecraft:furnace' ? 1600 : 800;
+    const duration = this.duration(this.fuel.name);
     if (!properties || ![0, 1, 2, 3].every(key => Number.isInteger(properties[key])) ||
       properties[1] !== duration || properties[0] <= 0 || properties[0] > duration ||
       properties[3] <= 0 || properties[2] <= 0 || properties[2] > properties[3] || !this.expectedSlots[0] ||
