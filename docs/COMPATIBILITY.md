@@ -55,6 +55,28 @@ IPC and dependency locks are unchanged. Offline fixtures use the repository's
 locked Minecraft 1.21.1 data and actual A*/collision/controller implementations;
 they do not establish real-server acceptance of this implementation.
 
+## Supported partial-block arrival
+
+Verified movement first checks the unchanged floored physical position. If that
+fails, it accepts the pinned pathfinder's raised planning cell only for grounded
+feet supported by the current loaded block's non-empty collision geometry.
+Farmland, bottom slabs and unobstructed lower stair treads can therefore finish
+an already-satisfied empty-path search without a `goal_reached` event. Support
+requires positive player-footprint overlap and collision-contact tolerance only;
+airborne, missing/empty geometry, vertical gaps, intersecting stair risers and
+wrong goal cells remain unconfirmed. This is not an increased goal radius.
+
+An accepted raised-cell completion clears the pathfinder goal only when it is
+still this operation's goal, preventing the next physics tick from starting the
+same empty path again without cancelling a newer goal. Existing cancellation,
+timeout, action-lane settlement and door-policy restoration remain unchanged.
+The fallback preserves a replacement goal's identity, but the pre-existing
+movement-policy cleanup can reset controls if that replacement still uses the
+temporary policy; this patch does not redesign external goal handoff.
+The helper's callers are affected; direct native `goto` is unchanged. Tool and
+IPC schemas, dependency locks, package versions and physics are unchanged.
+Offline pinned-plugin fixtures do not establish live-server acceptance.
+
 ## Change policy
 
 Schema or semantic changes require a documented compatibility decision, regression fixture and maintainer review. Breaking tool/IPC contracts require a version boundary and migration notes. Do not infer compatibility solely from matching tool names or package version. The public candidate is 3.1.1-rc.2 so it cannot be confused with the historical base.
