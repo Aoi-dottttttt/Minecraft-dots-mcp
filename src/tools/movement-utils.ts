@@ -63,7 +63,7 @@ export async function moveAndVerify(bot: Bot, goal: goals.Goal, timeoutMs = DEFA
       throw new Error('Pathfinder stopped without reaching the requested goal; movement not confirmed');
     }
     // Empty-path success leaves the goal installed. Retire only this operation's
-    // accepted goal before restoring movements, without touching a newer goal.
+    // accepted goal before restoring movements, without clearing a newer goal.
     if (supportedGridReached && bot.pathfinder.goal === goal) {
       bot.pathfinder.setGoal(null);
       bot.clearControlStates();
