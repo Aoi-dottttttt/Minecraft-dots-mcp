@@ -2,6 +2,8 @@
 
 ## 3.1.1-rc.2: verified maintenance candidate
 
+- Confirm already-satisfied movement goals on grounded partial-block collision surfaces, matching the pinned pathfinder planning cell; retire only the accepted owned goal to prevent empty-path restart
+
 - Verify detach cancellation across both IPC rejection and settled backend inventory-fence rejection, with no-motion and no-extra-click assertions
 - Allow verified movement through consistently open wooden doors using a scoped
   first-party pathfinding adapter, retaining real collision shapes and straight

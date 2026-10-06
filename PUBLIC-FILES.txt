@@ -111,6 +111,7 @@ tests/message-store.test.ts
 tests/native-ore-policy.test.ts
 tests/native-plugin-startup.test.ts
 tests/open-door-navigation.test.cjs
+tests/partial-block-arrival.test.ts
 tests/position-tools.test.ts
 tests/review-capability-gaps.test.ts
 tests/reviewer-complete-controls.test.ts
