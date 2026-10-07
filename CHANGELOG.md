@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased reviewed fix integration
+
+- Integrate Java 1.21.1 wool/bed dye alternatives from PR #6, retaining exact inventory confirmation
+- Integrate native placement rotation ordering and stale-pose checks from PR #7, preserving rc.3/V2 navigation cancellation
+- Integrate supported partial-block completion from PR #8 while preserving dry-land/oxygen guards, native goto coverage and V2 interruption ownership
+- Add cross-version fixture coverage for waterlogged refusal, aborted navigation and policy restoration
+- Refuse an unsubmitted placement when V2 defense is requested during aiming; retain critical confirmation after submission
+
 ## Unreleased: ranged-defense V2 review patch
 
 - Replace one shield pulse followed by permanent disable with renewable eight-second quiet leases (including visible already-attributed threats after successful blocks), continuous server-attributed facing and a 2.5-second pulse-loss watchdog

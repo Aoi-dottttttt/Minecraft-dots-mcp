@@ -252,7 +252,7 @@ for (const name of ['place-block', 'dig-block']) {
     let targetName = name === 'dig-block' ? 'stone' : 'air', sideEffects = 0, navigated = false;
     const block = (name: string, position: Vec3) => ({ name, position, type: s.bot.registry.blocksByName[name].id, stateId: s.bot.registry.blocksByName[name].defaultState });
     Object.assign(s.bot, {
-      entity: { id: 3, position: new Vec3(0, 64, 0) }, heldItem: s.authority.getFrame(0).slots[36],
+      entity: { id: 3, position: new Vec3(0, 64, 0), eyeHeight: 1.62 }, heldItem: s.authority.getFrame(0).slots[36],
       blockAt: (position: Vec3) => block(position.equals(target) ? targetName : position.equals(reference) ? 'stone' : 'air', position),
       canSeeBlock: () => true, canDigBlock: () => navigated,
       lookAt: async () => { controller.abort(); },
