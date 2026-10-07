@@ -35,8 +35,9 @@ if session.get('sessionId')!=sid or session.get('state')!='mcp_connected':raise 
 args=json.loads(a.arguments)
 if not isinstance(args,dict):p.error('arguments must be a JSON object')
 if a.tool not in {t['name'] for t in read(b/'tools.json')['tools']}:p.error('unknown tool')
-i=str(int(time.time()*1000))+'-'+uuid.uuid4().hex[:16]+'.json'
-payload=json.dumps({'name':a.tool,'arguments':args,'sessionId':sid,'createdAt':int(time.time()*1000)},ensure_ascii=False)
+created_at=int(time.time()*1000)
+i=str(created_at)+'-'+uuid.uuid4().hex[:16]+'.json'
+payload=json.dumps({'name':a.tool,'arguments':args,'sessionId':sid,'createdAt':created_at},ensure_ascii=False)
 if len(payload.encode())>65536:p.error('command exceeds 64 KiB')
 q=b/'commands'
 if not q.is_dir() or q.is_symlink():raise RuntimeError('Invalid command directory')

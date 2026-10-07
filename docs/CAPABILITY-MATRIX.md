@@ -207,3 +207,6 @@ The opt-in dashboard/3D service is not an extra gameplay tool. HTTP/socket priva
 | `read-workflow` | Bounded workflows | dedicated-fixture | `tests/workflow-tools.test.ts` |
 | `run-workflow` | Bounded workflows | dedicated-fixture | `tests/workflow-tools.test.ts` |
 | `cancel-workflow` | Bounded workflows | dedicated-fixture | `tests/workflow-tools.test.ts` |
+| `self-defense-enable` | Reactive self-defense | dedicated-fixture | `tests/self-defense.test.ts` |
+| `self-defense-disable` | Reactive self-defense | dedicated-fixture | `tests/self-defense.test.ts` |
+| `self-defense-status` | Reactive self-defense | dedicated-fixture | `tests/self-defense.test.ts` |

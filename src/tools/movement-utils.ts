@@ -1,5 +1,6 @@
 // Modified for 2.1.0-dot.1 release (2026-10-03). See RELEASE.md.
 import type { Bot } from 'mineflayer';
+import { interruptible, type InterruptibleOptions } from '../action-interruption.js';
 import type { goals } from 'mineflayer-pathfinder';
 import { allowOpenWoodenDoors } from './open-door-navigation.js';
 import { navigationHazard, useDryLandMovements } from '../movement-safety.js';
@@ -9,7 +10,10 @@ export const DEFAULT_MOVE_TIMEOUT_MS = 15000;
 export const MAX_MOVE_TIMEOUT_MS = 60000;
 
 /** Cancel immediately, then retain the action lane until goto has settled. */
-export async function moveAndVerify(bot: Bot, goal: goals.Goal, timeoutMs = DEFAULT_MOVE_TIMEOUT_MS, options: { signal?: AbortSignal } = {}): Promise<void> {
+export async function moveAndVerify(bot: Bot, goal: goals.Goal, timeoutMs = DEFAULT_MOVE_TIMEOUT_MS, options: InterruptibleOptions = {}): Promise<void> {
+  return interruptible(options, () => moveInternal(bot, goal, timeoutMs, options));
+}
+async function moveInternal(bot: Bot, goal: goals.Goal, timeoutMs: number, options: InterruptibleOptions): Promise<void> {
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > MAX_MOVE_TIMEOUT_MS) throw new Error('Movement timeout must be 1..60000ms');
   options.signal?.throwIfAborted();
   const initialHazard = navigationHazard(bot);

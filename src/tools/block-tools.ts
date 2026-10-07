@@ -1,4 +1,5 @@
 // Modified for 2.1.0-dot.1 release (2026-10-03). See RELEASE.md.
+import { interruptible, type InterruptibleOptions } from '../action-interruption.js';
 import { z } from "zod";
 import mineflayer from 'mineflayer';
 import pathfinderPkg from 'mineflayer-pathfinder';
@@ -19,7 +20,7 @@ interface FaceOption {
   vector: Vec3;
 }
 
-export function registerBlockTools(factory: ToolFactory, getBot: () => mineflayer.Bot, getOptions: () => { signal?: AbortSignal } = () => ({})): void {
+export function registerBlockTools(factory: ToolFactory, getBot: () => mineflayer.Bot, getOptions: () => InterruptibleOptions = () => ({})): void {
   factory.registerTool(
     "place-block",
     "Place a block at the specified position",
@@ -156,10 +157,10 @@ export function registerBlockTools(factory: ToolFactory, getBot: () => mineflaye
       if (!bot.canDigBlock(currentBlock) || !bot.canSeeBlock(currentBlock)) {
         throw new Error('Target is still not safely reachable for digging');
       }
-      await withServerBlockConfirmation(bot, blockPos.floored(), stateId => {
+      await interruptible(options, () => withServerBlockConfirmation(bot, blockPos.floored(), stateId => {
         const type = bot.registry.blocksByStateId[stateId]?.id;
         return type !== undefined && type !== currentBlock.type;
-      }, () => { options.signal?.throwIfAborted(); return bot.dig(currentBlock); });
+      }, () => { options.signal?.throwIfAborted(); return bot.dig(currentBlock); }));
       options.signal?.throwIfAborted();
       const after = bot.blockAt(blockPos);
       if (!after || after.type === currentBlock.type) {

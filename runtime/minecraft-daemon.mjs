@@ -183,18 +183,21 @@ async function call(socket, request) {
     return prior.result;
   }
   const observation = request.name === 'get-session-status';
+  const defenseStatus = request.name === 'self-defense-status';
+  const defenseDisable = request.name === 'self-defense-disable';
+  const outOfBand = observation || defenseStatus || defenseDisable;
   const stopping = request.name === 'stop-movement';
   const quitting = request.name === 'disconnect-player';
   if (backendTransportClosed) throw fail('BACKEND_ENDED', 'Backend process ended; start a new session explicitly');
-  if (backendEnded && !observation && !stopping) throw fail('BACKEND_ENDED', 'Game session ended; automatic reconnect is disabled');
-  if ((detachFence || uncertain || safetyStop) && !observation && !stopping && !quitting) throw fail('FENCED', 'Old work or an uncertain outcome prevents new mutations; no automatic recovery', { uncertain });
-  if (activeCall && !observation && !stopping && !quitting) throw fail('ACTION_BUSY', 'Another action is still running; no request was queued');
+  if (backendEnded && !outOfBand && !stopping) throw fail('BACKEND_ENDED', 'Game session ended; automatic reconnect is disabled');
+  if ((detachFence || uncertain || safetyStop) && !outOfBand && !stopping && !quitting) throw fail('FENCED', 'Old work or an uncertain outcome prevents new mutations; no automatic recovery', { uncertain });
+  if (activeCall && !outOfBand && !stopping && !quitting) throw fail('ACTION_BUSY', 'Another action is still running; no request was queued');
   if (ledger.size >= MAX_REQUESTS) throw fail('LEDGER_FULL', 'Session request limit reached; accepted IDs are never evicted or replayed');
   if (ledgerBytes + MAX_FRAME_BYTES > MAX_LEDGER_BYTES) throw fail('LEDGER_FULL', 'Session result budget reached; accepted IDs are never evicted or replayed');
   ledgerBytes += MAX_FRAME_BYTES; // Reserve one bounded result before issuing any action.
   const record = { requestId: request.requestId, name: request.name, signature, state: 'pending', result: null, error: null, settled: null };
   ledger.set(request.requestId, record); // Register before dispatch; retries can never issue another action.
-  if (!observation && !stopping && !quitting) activeCall = record;
+  if (!outOfBand && !stopping && !quitting) activeCall = record;
   let settle;
   record.settled = new Promise(resolve => { settle = resolve; });
   persistStatus();
@@ -211,7 +214,7 @@ async function call(socket, request) {
       if (backendStatus.ended) markBackendEnded(backendStatus.endReason || 'game_session_ended');
     }
     if (quitting && !result.isError) markBackendEnded('user_requested_disconnect');
-    if (!observation && !stopping && !quitting) {
+    if (!outOfBand && !stopping && !quitting) {
       // A tool can return an ordinary isError while setting an inventory fence.
       // Refresh before releasing the broker lane so canMutate cannot advertise
       // authority that the backend has already revoked.

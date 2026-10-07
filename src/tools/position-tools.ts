@@ -1,4 +1,5 @@
 // Modified for 2.1.0-dot.1 release (2026-10-03). See RELEASE.md.
+import { abortableDelay, interruptible, type InterruptibleOptions } from '../action-interruption.js';
 import { z } from "zod";
 import mineflayer from 'mineflayer';
 import pathfinderPkg from 'mineflayer-pathfinder';
@@ -10,7 +11,7 @@ import { moveAndVerify, DEFAULT_MOVE_TIMEOUT_MS, MAX_MOVE_TIMEOUT_MS } from './m
 
 type Direction = 'forward' | 'back' | 'left' | 'right';
 
-export function registerPositionTools(factory: ToolFactory, getBot: () => mineflayer.Bot, getOptions: () => { signal?: AbortSignal } = () => ({})): void {
+export function registerPositionTools(factory: ToolFactory, getBot: () => mineflayer.Bot, getOptions: () => InterruptibleOptions = () => ({})): void {
   factory.registerTool(
     "get-position",
     "Get the current position of the bot",
@@ -71,12 +72,14 @@ export function registerPositionTools(factory: ToolFactory, getBot: () => minefl
     {},
     async () => {
       const bot = getBot();
+      await interruptible(getOptions(), async () => {
       bot.setControlState('jump', true);
       try {
-        await new Promise(resolve => setTimeout(resolve, 250));
+        await abortableDelay(250, getOptions().signal);
       } finally {
         bot.setControlState('jump', false);
       }
+      });
       return factory.createResponse("Jump control applied for 250ms");
     }
   );
@@ -91,12 +94,14 @@ export function registerPositionTools(factory: ToolFactory, getBot: () => minefl
     async ({ direction, duration = 1000 }: { direction: Direction, duration?: number }) => {
       const bot = getBot();
       const before = bot.entity.position.clone();
+      await interruptible(getOptions(), async () => {
       bot.setControlState(direction, true);
       try {
-        await new Promise(resolve => setTimeout(resolve, duration));
+        await abortableDelay(duration, getOptions().signal);
       } finally {
         bot.setControlState(direction, false);
       }
+      });
       const actual = bot.entity.position;
       const moved = actual.distanceTo(before);
       return factory.createResponse(`Applied ${direction} control for ${duration}ms; observed displacement ${moved.toFixed(2)} blocks, current position (${actual.x.toFixed(2)}, ${actual.y.toFixed(2)}, ${actual.z.toFixed(2)})`);

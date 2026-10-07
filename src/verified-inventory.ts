@@ -4,6 +4,22 @@
 import type mineflayer from 'mineflayer';
 import { getInventoryAuthority, type ServerItem } from './inventory-authority.js';
 
+
+/** Protocol-767 armor wear exception: no slot/count/type/component replacement.
+ * The original authority still owns every byte, revision, cursor and fence. */
+function armorWear(bot: mineflayer.Bot, item: ServerItem | null): { identity: string; damage: number } | undefined {
+  if (!item || item.count !== 1 || !/_(helmet|chestplate|leggings|boots)$/.test(item.name)) return;
+  const max = bot.registry.items[item.type]?.maxDurability;
+  const raw = getInventoryAuthority(bot).raw(item) as { components?: Array<{ type: string; data: unknown }>; addedComponentCount?: number };
+  if (!Number.isInteger(max) || !max || !Array.isArray(raw.components)) return;
+  const damages = raw.components.filter(c => c.type === 'damage');
+  const damage = damages.length === 0 ? 0 : damages[0].data;
+  if (damages.length > 1 || typeof damage !== 'number' || !Number.isInteger(damage) || damage < 0 || damage >= max) return;
+  const components = raw.components.filter(c => c.type !== 'damage');
+  const identity = JSON.stringify({ ...raw, components, addedComponentCount: components.length }, (_key, value) => typeof value === 'bigint' ? { bigint: value.toString() } : value);
+  return { identity, damage };
+}
+
 export async function equipVerified(bot: mineflayer.Bot, sourceSlot: number, destination: mineflayer.EquipmentDestination, timeoutMs = 5000, options: { exactSource?: boolean; signal?: AbortSignal } = {}): Promise<void> {
   const authority = getInventoryAuthority(bot);
   authority.assertMutationReady();
@@ -31,6 +47,18 @@ export async function equipVerified(bot: mineflayer.Bot, sourceSlot: number, des
     if (matchingTarget && scratch < 0) throw new Error('Exact equipment transfer needs one empty inventory storage slot to keep matching stacks separate; free a slot or explicitly select the existing hand stack. No click was sent');
     const tracked = new Map<number, ServerItem | null>([[sourceSlot, source], [target, oldTarget]]);
     if (scratch >= 0) tracked.set(scratch, null);
+    // Check every server update, not just the final image: a durability rollback,
+    // transient replacement or break remains invalid even if later restored.
+    const armor = new Map([5, 6, 7, 8].filter(slot => !tracked.has(slot)).map(slot => [slot, { value: armorWear(bot, frame.slots[slot]), revision: frame.revisions[slot] }]));
+    let armorViolation = false;
+    const watchArmor = () => {
+      for (const [slot, prior] of armor) {
+        if (frame.revisions[slot] <= prior.revision) continue;
+        const current = armorWear(bot, frame.slots[slot]);
+        if (current?.identity !== prior.value?.identity || (prior.value && (!current || current.damage < prior.value.damage))) armorViolation = true;
+        prior.value = current; prior.revision = frame.revisions[slot];
+      }
+    };
     let expectedCursor: ServerItem | null = null;
     let submitted = false;
     let windowChanged = false;
@@ -38,6 +66,7 @@ export async function equipVerified(bot: mineflayer.Bot, sourceSlot: number, des
     const windowEvents = ['open_window', 'open_horse_window', 'close_window', 'respawn'] as const;
     const guard = () => {
       authority.assertMutationReady();
+      if (armorViolation) throw new Error('Equipment inventory conservation was not confirmed: unrelated armor changed beyond monotonic wear');
       options.signal?.throwIfAborted();
       if (windowChanged || bot.currentWindow || authority.frames.get(0) !== frame) throw new Error('Container changed during equipment transfer');
     };
@@ -58,6 +87,7 @@ export async function equipVerified(bot: mineflayer.Bot, sourceSlot: number, des
       tracked.set(slot, afterSlot); expectedCursor = afterCursor;
       guard(); checkTracked();
     };
+    authority.on('change', watchArmor);
     for (const event of windowEvents) bot._client.on(event, markWindowChanged);
     bot.on('windowClose', markWindowChanged);
     try {
@@ -73,6 +103,7 @@ export async function equipVerified(bot: mineflayer.Bot, sourceSlot: number, des
       if (submitted) authority.block('Equipment transfer was interrupted; inspect inventory and cursor before further actions');
       throw error;
     } finally {
+      authority.removeListener('change', watchArmor);
       for (const event of windowEvents) bot._client.removeListener(event, markWindowChanged);
       bot.removeListener('windowClose', markWindowChanged);
     }
@@ -80,12 +111,17 @@ export async function equipVerified(bot: mineflayer.Bot, sourceSlot: number, des
       if (slot === sourceSlot || slot === target) return true; // Exact swap is checked below.
       const previous = before[slot];
       if ((item ? authority.identity(item, true) : null) === (previous?.full ?? null)) return true;
+      const wear = armor.get(slot);
+      if (!armorViolation && wear?.value && frame.revisions[slot] > 0) {
+        const current = armorWear(bot, item);
+        if (current && current.identity === wear.value.identity && current.damage === wear.value.damage) return true;
+      }
       // The server can deliver ordinary pickups during the swap. Only additive
       // changes in unrelated storage slots are safe; never excuse a loss or replacement.
       if (slot < 9 || slot >= 45 || !item || !Number.isInteger(item.type) || !bot.registry.items[item.type] || !Number.isInteger(item.stackSize) || item.stackSize < 1 || !Number.isInteger(item.count) || item.count < 1 || item.count > item.stackSize) return false;
       return previous === null || (authority.identity(item) === previous.identity && item.count >= previous.count);
     });
-    if (authority.cursor || !authority.same(frame.slots[target], source) || !authority.same(frame.slots[sourceSlot], oldTarget) || (scratch >= 0 && frame.slots[scratch] !== null) || !conserved) { authority.block('Equipment inventory conservation was not confirmed'); throw new Error('Equipment inventory conservation was not confirmed'); }
+    if (armorViolation || authority.cursor || !authority.same(frame.slots[target], source) || !authority.same(frame.slots[sourceSlot], oldTarget) || (scratch >= 0 && frame.slots[scratch] !== null) || !conserved) { authority.block('Equipment inventory conservation was not confirmed'); throw new Error('Equipment inventory conservation was not confirmed'); }
   }
   if (destination === 'hand') {
     authority.assertMutationReady();
