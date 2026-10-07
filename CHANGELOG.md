@@ -1,6 +1,14 @@
 # Changelog
 
+## Unreleased: bilingual documentation
+
+- Make `README.md` the Chinese default and add `README_EN.md`, with reciprocal language links and changelog links
+- Describe the V2 and compatibility fixes already included in current main; distinguish the unchanged package version and historical validation snapshot from exact-commit CI and live-server acceptance
+- Keep `README.zh-CN.md` as a compatibility link to the current documentation
+
 ## Unreleased reviewed fix integration
+
+Merged through [PR #10](https://github.com/Aoi-dottttttt/Minecraft-dots-mcp/pull/10); package version remains 3.2.0-rc.3. Source integration does not update a running backend or establish live-server acceptance.
 
 - Integrate Java 1.21.1 wool/bed dye alternatives from PR #6, retaining exact inventory confirmation
 - Integrate native placement rotation ordering and stale-pose checks from PR #7, preserving rc.3/V2 navigation cancellation
@@ -9,6 +17,8 @@
 - Refuse an unsubmitted placement when V2 defense is requested during aiming; retain critical confirmation after submission
 
 ## Unreleased: ranged-defense V2 review patch
+
+Included in current main through [PR #9](https://github.com/Aoi-dottttttt/Minecraft-dots-mcp/pull/9); no separate release or live-effectiveness claim is implied.
 
 - Replace one shield pulse followed by permanent disable with renewable eight-second quiet leases (including visible already-attributed threats after successful blocks), continuous server-attributed facing and a 2.5-second pulse-loss watchdog
 - Keep active combat bounded to 12 seconds/16 attacks and movement to three fully loaded same-level steps inside a four-block origin leash; no digging, placement, doors, jumps, liquids, ladders or blind pursuit
@@ -49,7 +59,7 @@
 - Correct workstation evidence labels and remove the disabled screenshot recommendation from the map tool
 - Pin observation dependencies, retain all upstream notices, and add HTTP/socket/worker and synthetic-browser CI checks
 
-This is a source/PR candidate. It has not been merged, installed into a live backend, or accepted on a real server. IPC remains version 1; existing backend code is unchanged until the user explicitly starts a new authorized session. See VALIDATION.json and exact-commit CI for completed and blocked checks.
+Historical status recorded for the rc.1 source/PR candidate: it had not yet been merged, installed into a live backend, or accepted on a real server. IPC remained version 1; existing backend code was unchanged until the user explicitly started a new authorized session. See the dated VALIDATION.json snapshot and exact-commit CI for the corresponding completed and blocked checks.
 
 ## 3.1.1-rc.2: verified maintenance candidate
 
