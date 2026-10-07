@@ -489,6 +489,12 @@ test('legacy place-block also records independently confirmed source without par
   const s = placementFixture(); const server = { tool: sinon.stub() } as unknown as McpServer;
   const factory = new ToolFactory(server, { checkConnectionAndReconnect: async () => ({ connected: true }) } as BotConnection);
   Object.defineProperty(s.bot, 'heldItem', { get: () => s.authority.getFrame(0).slots[36] });
+  s.bot.waitForTicks = async () => {};
+  s.bot.lookAt = async (point: Vec3) => {
+    const delta = point.minus(s.bot.entity.position.offset(0, 1.62, 0));
+    s.bot.entity.yaw = Math.atan2(-delta.x, -delta.z);
+    s.bot.entity.pitch = Math.atan2(delta.y, Math.hypot(delta.x, delta.z));
+  };
   s.bot.placeBlock = async () => { s.place(); s.decrement(); };
   registerBlockTools(factory, () => s.bot);
   const call = (server.tool as sinon.SinonStub).getCalls().find(call => call.args[0] === 'place-block')!.args[3];

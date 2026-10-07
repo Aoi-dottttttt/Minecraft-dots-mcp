@@ -156,6 +156,8 @@ tests/native-ore-policy.test.ts
 tests/native-plugin-startup.test.ts
 tests/open-door-navigation.test.cjs
 tests/oxygen-authority.test.ts
+tests/partial-block-arrival.test.ts
+tests/placement-rotation-order.test.ts
 tests/position-tools.test.ts
 tests/readonly-observer.test.ts
 tests/review-capability-gaps.test.ts
@@ -167,6 +169,7 @@ tests/self-defense.test.ts
 tests/special-terrain-navigation.test.cjs
 tests/stdio-filter.test.ts
 tests/survival-interactions.test.ts
+tests/tagged-dye-recipes.test.ts
 tests/tool-factory.test.ts
 tests/verified-boat.test.ts
 tests/verified-consumption.test.ts

@@ -136,3 +136,107 @@ inventory fence releases item use and prevents old queued work from restarting.
 Prepare the hotbar weapon and off-hand shield before enabling: V2 never performs
 a storage equipment swap in response to damage. This changes tactical semantics
 without changing IPC version or enabling an old backend automatically.
+
+## Java 1.21.1 wool and bed dye alternatives
+
+The locked minecraft-data 3.117.0 / prismarine-recipe 1.5.0 combination keeps
+only the first source-color alternative in each wool/bed dye recipe. For
+example, cyan dye resolves only with black wool or black bed. Vanilla Java
+1.21.1 instead enumerates all **15 other colors**, excluding the output color.
+The complete wool/beds tags must not be substituted because they include that
+illegal same-color input.
+
+A first-party adapter verifies an existing resolved shapeless recipe from
+`recipesAll`: two one-item inputs, one output, no remainder or table, exact
+registered IDs and a -1/-1/+1 delta. It constructs only the missing alternatives
+through the same installed `Recipe` constructor, without changing templates or
+the global registry. The adapter is limited to exact version 1.21.1 and the
+32 wool/bed outputs. `list-recipes`, `get-recipe`, `can-craft` and `craft-item`
+share these concrete alternatives; unrelated and normal shaped bed recipes
+remain unchanged. There is no general raw-recipe execution fallback.
+
+Execution continues through `craftVerified`, never optimistic `bot.craft`.
+Authoritative ingredient/cursor/grid/output confirmation, space checks,
+serialization, cancellation, uncertainty fences and no automatic retry remain
+in force. Each batch step reselects from current inventory; an output cannot
+become a same-color input in the next step. Tool schemas, IPC, package versions
+and dependency locks are unchanged. Datapacks or plugins overriding vanilla
+recipes and other Minecraft versions are outside this compatibility repair.
+
+Recipe rules were checked as static JSON inside the official
+[Mojang 1.21.1 server distribution](https://piston-data.mojang.com/v1/objects/59353fb40c36d304f2035d51e7d6e6baa98dc05c/server.jar)
+(SHA1 `59353fb40c36d304f2035d51e7d6e6baa98dc05c`), at
+`data/minecraft/recipe/dye_<color>_{wool,bed}.json`. The archive was not executed.
+`tests/tagged-dye-recipes.test.ts` covers all 480 legal input/output pairs,
+32 same-color refusals, read/execution agreement, split stacks, malformed
+resolved templates and the existing authoritative safety barriers using only
+neutral synthetic packets. These tests do not establish real-server acceptance.
+
+
+## Native placement rotation ordering
+
+`place-block` aims at the exact center of the clicked reference face used by
+Mineflayer 4.39.0's public `placeBlock`, then waits for one native physics tick.
+A forced look changes local rotation immediately; it does not itself write the
+rotation packet. The tick's synchronous position/look write completes before
+placement resumes. In this pinned version, a zero local angle delta returns
+before the forced-look branch, so an earlier non-forced turn can still be in
+flight. Only in that case, two standard forced public look calls turn by
+0.01 radians (less than one degree) and back to the exact face before the tick.
+Both complete in microtasks without an intermediate rotation packet. The adapter
+verifies that these turns changed finite local angles and that the final aim
+rounds to zero under Mineflayer's own 0.15-degree quantizer; extreme or invalid
+poses fail closed. Cancellation between preparation steps starts no cleanup
+turn or placement. No raw movement packet, arbitrary sleep, vendor patch,
+physics-speed change or second placement attempt is introduced.
+
+After navigation and again after that tick, placement checks the bot session,
+held item/type/count and selected slot, inventory window, reference block
+identity/state, loaded empty target, player overlap, visibility and a conservative
+4.5-block eye-to-clicked-face reach limit. A disconnect/respawn, dimension change
+during aiming, or a changed player position, height, eye-height or rotation
+at the final recheck, cancels placement. This deliberately requires a stationary,
+stable pose: a moving/falling player must settle and be inspected before another explicit
+attempt. Matching the clicked point and retaining that pose ensure the public
+`placeBlock`'s internal look does not initiate a second turn after these checks.
+
+The native one-tick wait has a 5050 ms timeout. The serialized action lane stays
+occupied until preparation settles; timeout or cancellation does not leave a
+pending placement that can fire on a later tick. Server-authoritative block
+confirmation, exact one-item debit requirements for placement provenance,
+uncertainty fences and no automatic retry remain unchanged. An absent inventory
+debit cannot grant provenance even when the block effect is confirmed.
+
+The neutral offline fixture loads the actual locked physics, generic-place and
+public place-block plugins. It verifies all six clicked-face centers, rotation
+packet ordering, stalled ticks, pending non-forced turns, already-sent aim,
+invalid angle history, cancellation/stale preparation and the existing
+confirmation boundaries. It does not establish server acceptance, every
+orientation-sensitive block's placement semantics, or live bed/boat behavior.
+Tool schemas, package versions, IPC and dependency locks are unchanged.
+
+
+## Supported partial-block arrival
+
+Verified movement first checks the unchanged floored physical position. If that
+fails, it accepts the pinned pathfinder's raised planning cell only for grounded
+feet supported by the current loaded block's non-empty collision geometry.
+Farmland, bottom slabs and unobstructed lower stair treads can therefore finish
+an already-satisfied empty-path search without a `goal_reached` event. Support
+requires positive player-footprint overlap and collision-contact tolerance only;
+airborne, missing/empty geometry, vertical gaps, intersecting stair risers and
+wrong goal cells remain unconfirmed. This is not an increased goal radius.
+
+An accepted raised-cell completion clears the pathfinder goal only when it is
+still this operation's goal, preventing the next physics tick from starting the
+same empty path again without cancelling a newer goal. Existing cancellation,
+timeout, action-lane settlement and door-policy restoration remain unchanged.
+The fallback preserves a replacement goal's identity, but the pre-existing
+movement-policy cleanup can reset controls if that replacement still uses the
+temporary policy; this patch does not redesign external goal handoff.
+In this rc.3/V2 integration all helper callers are affected, including native
+`goto`. Dry-route, oxygen, cancellation and defense-interruption checks remain
+in force. Tool and
+IPC schemas, dependency locks, package versions and physics are unchanged.
+Offline pinned-plugin fixtures do not establish live-server acceptance.
+
