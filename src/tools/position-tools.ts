@@ -10,7 +10,7 @@ import { moveAndVerify, DEFAULT_MOVE_TIMEOUT_MS, MAX_MOVE_TIMEOUT_MS } from './m
 
 type Direction = 'forward' | 'back' | 'left' | 'right';
 
-export function registerPositionTools(factory: ToolFactory, getBot: () => mineflayer.Bot): void {
+export function registerPositionTools(factory: ToolFactory, getBot: () => mineflayer.Bot, getOptions: () => { signal?: AbortSignal } = () => ({})): void {
   factory.registerTool(
     "get-position",
     "Get the current position of the bot",
@@ -42,7 +42,7 @@ export function registerPositionTools(factory: ToolFactory, getBot: () => minefl
 
       const bot = getBot();
       const goal = new goals.GoalNear(x, y, z, range);
-      await moveAndVerify(bot, goal, timeoutMs);
+      await moveAndVerify(bot, goal, timeoutMs, getOptions());
       const actual = bot.entity.position;
       return factory.createResponse(`Successfully moved to position near (${x}, ${y}, ${z}); current position (${actual.x.toFixed(2)}, ${actual.y.toFixed(2)}, ${actual.z.toFixed(2)})`);
     }

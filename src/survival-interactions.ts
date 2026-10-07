@@ -355,6 +355,23 @@ function reconcileDismount(bot: Bot, vehicle: Entity): void {
   if (vehicle.passengers) vehicle.passengers = vehicle.passengers.filter(passenger => passenger.id !== bot.entity.id);
   bot.emit('dismount', vehicle);
 }
+const vehicleGuards = new WeakSet<Bot>();
+/** The pinned native cache omits a nonnegative set_passengers removal. Reconcile
+ * only that raw evidence, including unsolicited detachments while steering. */
+export function installVehicleStateGuard(bot: Bot): void {
+  if (vehicleGuards.has(bot)) return;
+  vehicleGuards.add(bot);
+  const passengers = (packet: { entityId?: number; passengers?: number[] }) => {
+    const vehicle = (bot as VehicleBot).vehicle;
+    if (vehicle && packet.entityId === vehicle.id && Array.isArray(packet.passengers) && !packet.passengers.includes(bot.entity.id)) reconcileDismount(bot, vehicle);
+  };
+  const destroyed = (packet: { entityIds?: number[] }) => {
+    const vehicle = (bot as VehicleBot).vehicle;
+    if (vehicle && packet.entityIds?.includes(vehicle.id)) reconcileDismount(bot, vehicle);
+  };
+  bot._client.on('set_passengers', passengers); bot._client.on('entity_destroy', destroyed);
+  bot.once('end', () => { bot._client.removeListener('set_passengers', passengers); bot._client.removeListener('entity_destroy', destroyed); vehicleGuards.delete(bot); });
+}
 export async function mountVerified(bot: Bot, entityId: number, options: InteractionOptions = {}): Promise<InteractionResult> {
   assertActive(bot, options);
   const entity = targetEntity(bot, entityId);
@@ -384,10 +401,19 @@ export async function steerVehicleBounded(bot: Bot, options: InteractionOptions 
   if (![options.left, options.forward].every(v => Number.isFinite(v) && v >= -1 && v <= 1)) throw new Error('Vehicle steering must be between -1 and 1');
   const ms = duration(options.durationMs);
   const initial = vehicle.position.clone();
-  const evidenceSources = ['entity_teleport', 'rel_entity_move', 'entity_move_look'].map(event => ({ emitter: bot._client, event, accepts: (value: unknown) => {
+  const evidenceSources: EvidenceSource[] = ['entity_teleport', 'rel_entity_move', 'entity_move_look'].map(event => ({ emitter: bot._client, event, accepts: (value: unknown) => {
     const packet = value as { entityId?: number; dX?: number; dY?: number; dZ?: number; x?: number; y?: number; z?: number };
     return packet.entityId === vehicle.id && (event === 'entity_teleport' ? [packet.x, packet.y, packet.z].every(Number.isFinite) && new Vec3(packet.x!, packet.y!, packet.z!).distanceTo(initial) > 0.01 : Boolean(packet.dX || packet.dY || packet.dZ));
   }, description: 'server vehicle movement update' }));
+  evidenceSources.push({ emitter: bot._client, event: 'set_passengers', accepts: (value: unknown) => {
+    const packet = value as { entityId?: number; passengers?: number[] };
+    if (packet.entityId === vehicle.id && Array.isArray(packet.passengers) && !packet.passengers.includes(bot.entity.id)) throw new Error('Server detached the player while steering; vehicle controls stopped');
+    if (packet.entityId !== vehicle.id && packet.passengers?.includes(bot.entity.id)) throw new Error('Server changed the vehicle while steering; controls stopped');
+    return false;
+  }, description: 'vehicle passenger consistency' }, { emitter: bot._client, event: 'entity_destroy', accepts: (value: unknown) => {
+    if ((value as { entityIds?: number[] }).entityIds?.includes(vehicle.id)) throw new Error('Server removed the vehicle while steering; controls stopped');
+    return false;
+  }, description: 'vehicle existence consistency' });
   let evidence: string[];
   try {
     evidence = await observeEvidence(bot, evidenceSources, () => bot.moveVehicle(options.left, options.forward), { ...options, timeoutMs: ms }, ms);

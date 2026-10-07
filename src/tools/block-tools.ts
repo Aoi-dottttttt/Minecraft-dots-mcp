@@ -78,7 +78,7 @@ export function registerBlockTools(factory: ToolFactory, getBot: () => mineflaye
         if (referenceBlock && referenceBlock.name !== 'air') {
           if (!bot.canSeeBlock(referenceBlock)) {
             const goal = new goals.GoalNear(referencePos.x, referencePos.y, referencePos.z, 2);
-            await moveAndVerify(bot, goal);
+            await moveAndVerify(bot, goal, undefined, options);
             options.signal?.throwIfAborted();
           }
 
@@ -145,7 +145,7 @@ export function registerBlockTools(factory: ToolFactory, getBot: () => mineflaye
 
       if (!bot.canDigBlock(block) || !bot.canSeeBlock(block)) {
         const goal = new goals.GoalNear(x, y, z, 2);
-        await moveAndVerify(bot, goal);
+        await moveAndVerify(bot, goal, undefined, options);
         options.signal?.throwIfAborted();
       }
 

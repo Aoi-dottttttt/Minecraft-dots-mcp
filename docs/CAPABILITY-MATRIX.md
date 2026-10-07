@@ -14,7 +14,7 @@ The checker keeps names synchronized with CAPABILITIES.json and requires each re
 - Inventory confirmation remains strict. Fuel consumption evidence covers coal/charcoal and exact 300-tick birch planks in ordinary furnaces; other fuels, remainders, re-ignition and background changes do not gain a general exception
 - Placement provenance records newly verified placements within one continuously observed session. An old coordinate, block type, or historical note cannot establish ownership
 - A supported window layout proves slot mapping, not every workstation recipe or workflow. Brewing, smithing, loom and cartography require their own effect fixtures before stronger claims
-- Bounded movement still needs separate ladder, water and unusual collision scenarios. Open-door work in PR #2 is reviewed separately and is not included here
+- Movement now includes conservative water/oxygen guards and special-terrain fixtures; unusual collision and real swimming remain separately unvalidated. The merged open-wooden-door repair is included
 - Vehicle input and mounting are partial. Full boat placement, riding and steering is not validated; sending `steer_vehicle` input does not implement a complete vehicle physics controller
 - Books/signs/chat are untrusted player-authored data. `read-book` closes an observation gap, while writing a book still requires subsequent authoritative readback to establish its final contents
 - Projectile, advanced combat, redstone, farming and unusual entity interactions are not certified merely by generic interaction tools
@@ -29,12 +29,16 @@ These are upstream implementation references, not a Mojang protocol specificatio
 - [Pathfinder movement implementation](https://github.com/PrismarineJS/mineflayer-pathfinder/blob/master/lib/movements.js)
 - [Forge channel compatibility rules](https://docs.minecraftforge.net/en/1.21.x/networking/simpleimpl/) and [legacy protocol-forge scope](https://github.com/PrismarineJS/node-minecraft-protocol-forge)
 
+## Local observation outside the MCP catalog
+
+The opt-in dashboard/3D service is not an extra gameplay tool. HTTP/socket privacy and lifecycle tests are in `tests/readonly-observer.test.ts`; adapted 1.21.1 worker geometry at negative and high Y is checked by `scripts/test-observer-worker.mjs`. Browser pixel evidence requires the dedicated CI job. See [observer boundaries](READONLY-OBSERVER.md).
+
 ## Exact backend tool inventory
 
 | Tool | Family | Evidence level | Fixture |
 | --- | --- | --- | --- |
 | `get-position` | Observation | catalog-only | — |
-| `move-to-position` | Movement | catalog-only | — |
+| `move-to-position` | Movement | dedicated-fixture | `tests/open-door-navigation.test.cjs` |
 | `look-at` | Movement | catalog-only | — |
 | `jump` | Movement | catalog-only | — |
 | `move-in-direction` | Movement | catalog-only | — |
@@ -83,7 +87,7 @@ These are upstream implementation references, not a Mojang protocol specificatio
 | `get_cursor_target` | Observation | catalog-only | — |
 | `get_blocks_in_region` | Observation | catalog-only | — |
 | `wait_for_chunks_to_load` | Observation | catalog-only | — |
-| `goto` | Movement | catalog-only | — |
+| `goto` | Movement | dedicated-fixture | `tests/movement-safety.test.ts` |
 | `set_goal` | Movement | catalog-only | — |
 | `flee_from` | Movement | catalog-only | — |
 | `follow_entity` | Movement | catalog-only | — |
@@ -123,10 +127,10 @@ These are upstream implementation references, not a Mojang protocol specificatio
 | `furnace_action` | Furnaces and workstations | dedicated-fixture | `tests/verified-furnace-fuel-race.test.ts` |
 | `furnace_status` | Furnaces and workstations | catalog-only | — |
 | `smelt_item` | Furnaces and workstations | catalog-only | — |
-| `enchant_item` | Furnaces and workstations | catalog-only | — |
-| `anvil_combine` | Furnaces and workstations | catalog-only | — |
-| `open_villager` | Furnaces and workstations | catalog-only | — |
-| `trade_with_villager` | Furnaces and workstations | catalog-only | — |
+| `enchant_item` | Furnaces and workstations | dedicated-fixture | `tests/reviewer-complete-controls.test.ts` |
+| `anvil_combine` | Furnaces and workstations | dedicated-fixture | `tests/reviewer-complete-controls.test.ts` |
+| `open_villager` | Furnaces and workstations | dedicated-fixture | `tests/reviewer-complete-controls.test.ts` |
+| `trade_with_villager` | Furnaces and workstations | dedicated-fixture | `tests/reviewer-complete-controls.test.ts` |
 | `list_recipes` | Crafting | catalog-only | — |
 | `craft_item` | Crafting | dedicated-fixture | `tests/review-capability-gaps.test.ts` |
 | `collect_block` | Blocks and building | catalog-only | — |
@@ -195,3 +199,11 @@ These are upstream implementation references, not a Mojang protocol specificatio
 | `move-controls` | Movement | catalog-only | — |
 | `list-gameplay-capabilities` | Observation | catalog-only | — |
 | `game-command` | Text and events | catalog-only | — |
+| `inspect-movement-safety` | Movement | dedicated-fixture | `tests/movement-safety.test.ts` |
+| `surface-from-water` | Movement | dedicated-fixture | `tests/movement-safety.test.ts` |
+| `launch-boat` | Movement | dedicated-fixture | `tests/verified-boat.test.ts` |
+| `plan-gather-workflow` | Bounded workflows | dedicated-fixture | `tests/workflow-tools.test.ts` |
+| `plan-blueprint-workflow` | Bounded workflows | dedicated-fixture | `tests/workflow-tools.test.ts` |
+| `read-workflow` | Bounded workflows | dedicated-fixture | `tests/workflow-tools.test.ts` |
+| `run-workflow` | Bounded workflows | dedicated-fixture | `tests/workflow-tools.test.ts` |
+| `cancel-workflow` | Bounded workflows | dedicated-fixture | `tests/workflow-tools.test.ts` |

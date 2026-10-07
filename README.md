@@ -2,7 +2,7 @@
 
 A shared maintenance project: fix a bug once, keep a neutral regression, and share reviewed improvements across installations. Each installation keeps its own configuration, credentials and game state local. Contributions use [forks and pull requests](CONTRIBUTING.md); installation and gameplay still need the respective user’s authorization.
 
-Public source candidate **3.1.1-rc.2**, based on 3.1.0-dot.2 for Minecraft Java **1.21.1 / protocol 767**. It combines server-authoritative inventory/crafting checks with a persistent game backend and a restartable MCP controller. [中文快速开始](README.zh-CN.md)
+Public source candidate **3.2.0-rc.3**, based on 3.1.0-dot.2 for Minecraft Java **1.21.1 / protocol 767**. It combines server-authoritative inventory/crafting checks with a persistent game backend and a restartable MCP controller. [中文快速开始](README.zh-CN.md)
 
 This is experimental software. A registered tool is not proof that its complete behavior works on a real server. In particular, **boat placement/riding is not live-validated and is not advertised as working**. Back up valuable worlds, use an authorized test environment first, and review [scope and limits](INTEGRATION.md) and [security](SECURITY.md). The dependency audit still requires reviewing documented development-only glob and optional authentication-chain advisories; this candidate is not a blanket security certification.
 
@@ -62,6 +62,23 @@ python3 runtime/call.py --state-dir "$CONTROLLER_DIR" get-session-status
 Only one controller may act at a time. Stop the first controller before attaching a replacement. Never reuse a previous controller queue or retry an uncertain item operation. Use `disconnect-player` to end the game explicitly. Controller detach stops continuous control but preserves the daemon; the bot can still be harmed while unattended. A real disconnect never triggers automatic reconnect.
 
 The optional Linux Start window is documented in [PERSISTENT-SESSIONS.md](PERSISTENT-SESSIONS.md). It requires an external user-supplied bridge and does not read its configuration until Start is clicked.
+
+## Bounded gameplay additions
+
+The candidate adds [dry-route/oxygen guards, explicit surfacing and boat-launch evidence](docs/MOVEMENT-SAFETY.md), plus [reviewable gather/storage/restock and simple-block schematic plans](docs/WORKFLOWS.md). Workflows execute only explicitly requested batches on the existing action lane, keep exact progress and never resume/retry uncertain steps. They are offline-tested scope additions, not a claim of reliable autonomous swimming, complete boat physics, farming or unrestricted survival building.
+
+## Optional read-only observation
+
+Add `--observe-port 3100` only when starting a new authorized daemon session to serve a local status/inventory dashboard and Prismarine 3D reconstruction at `http://127.0.0.1:3100/`. It shares the existing bot, accepts no gameplay actions and is disabled by default. No remote bind, authentication or public exposure is added. See [observer architecture, security and tests](docs/READONLY-OBSERVER.md).
+
+For a native status/inventory window, run `python3 runtime/observer-ui.py --state-dir "$GAME_DIR"` on the same desktop. It reads existing private files only; it does not provide 3D or bypass browser restrictions.
+
+For a file-only native 3D reconstruction, the separate default-off
+`--observe-world-files` new-session flag exports a 17×13×17 loaded-cell region
+at most once every two seconds. An explicitly launched mesh worker and installed
+Godot view render official geometry/textures with unknown/stale indicators.
+See [native startup, limits and resource measurements](docs/WORLD-MESH-PROTOTYPE.md).
+This is not a native Minecraft client screenshot or an unrestricted world view.
 
 ## Entrypoints and safety scope
 

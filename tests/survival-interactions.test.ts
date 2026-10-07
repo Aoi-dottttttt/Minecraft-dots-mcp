@@ -14,7 +14,7 @@ import { inventoryFixture } from './helpers/inventory-fixture.js';
 import { registerInteractionTools } from '../src/tools/interaction-tools.js';
 import {
   activateBlockVerified, dismountVerified, farmBlockVerified, inspectInteractionBlock,
-  mountVerified, selectInteractionItem, setBedRespawn, sleepInBedVerified, steerVehicleBounded,
+  mountVerified, installVehicleStateGuard, selectInteractionItem, setBedRespawn, sleepInBedVerified, steerVehicleBounded,
   stopHeldItem, useHeldItemBounded, useItemOnBlockVerified, useOnEntityVerified, wakeVerified
 } from '../src/survival-interactions.js';
 
@@ -254,6 +254,42 @@ test('steering reports only server movement and releases on cancellation', async
   const controller = new AbortController();
   (bot.moveVehicle as sinon.SinonStub).callsFake((left: number, forward: number) => { if (left || forward) setTimeout(() => controller.abort(), 2); });
   await t.throwsAsync(steerVehicleBounded(bot, { left: 0, forward: 1, durationMs: 30, signal: controller.signal }), { message: /cancelled/ });
+  t.deepEqual((bot.moveVehicle as sinon.SinonStub).lastCall.args, [0, 0]);
+});
+
+test('raw passenger removal reconciles the pinned stale vehicle cache before another steer', async t => {
+  const { bot, addEntity } = fixture(); const boat = addEntity('boat');
+  Object.assign(bot, { vehicle: boat }); installVehicleStateGuard(bot); installVehicleStateGuard(bot);
+  t.is(bot._client.listenerCount('set_passengers'), 1);
+  bot._client.emit('set_passengers', { entityId: 99, passengers: [] });
+  t.is((bot as unknown as { vehicle?: Entity }).vehicle, boat);
+  bot._client.emit('set_passengers', { entityId: boat.id, passengers: [] });
+  await t.throwsAsync(steerVehicleBounded(bot, { left: 0, forward: 1, durationMs: 5 }), { message: /not mounted/ });
+  t.false((bot.moveVehicle as sinon.SinonStub).called);
+  bot.emit('end', 'neutral test'); t.is(bot._client.listenerCount('set_passengers'), 0);
+});
+
+for (const scenario of ['detached', 'changed', 'destroyed'] as const) test(`steering stops immediately when the server reports the vehicle ${scenario}`, async t => {
+  const { bot, addEntity } = fixture(); const boat = addEntity('boat'); Object.assign(bot, { vehicle: boat });
+  (bot.moveVehicle as sinon.SinonStub).callsFake((left: number, forward: number) => {
+    if (!left && !forward) return;
+    bot._client.emit('rel_entity_move', { entityId: boat.id, dX: 100, dY: 0, dZ: 0 });
+    if (scenario === 'detached') bot._client.emit('set_passengers', { entityId: boat.id, passengers: [] });
+    if (scenario === 'changed') bot._client.emit('set_passengers', { entityId: 99, passengers: [bot.entity.id] });
+    if (scenario === 'destroyed') bot._client.emit('entity_destroy', { entityIds: [boat.id] });
+  });
+  await t.throwsAsync(steerVehicleBounded(bot, { left: 0, forward: 1, durationMs: 500 }), { message: /Server .*vehicle|Server detached/ });
+  t.deepEqual((bot.moveVehicle as sinon.SinonStub).lastCall.args, [0, 0]);
+  t.is(bot._client.listenerCount('set_passengers'), 0);
+});
+
+test('steering evidence is specific to the tracked vehicle and remains a movement observation', async t => {
+  const { bot, addEntity } = fixture(); const boat = addEntity('boat'); Object.assign(bot, { vehicle: boat });
+  (bot.moveVehicle as sinon.SinonStub).callsFake((left: number, forward: number) => {
+    if (left || forward) bot._client.emit('rel_entity_move', { entityId: boat.id, dX: 100, dY: 0, dZ: 0 });
+  });
+  const result = await steerVehicleBounded(bot, { left: 0, forward: 1, durationMs: 5 });
+  t.true(result.confirmed); t.regex(result.detail, /movement observed/);
   t.deepEqual((bot.moveVehicle as sinon.SinonStub).lastCall.args, [0, 0]);
 });
 

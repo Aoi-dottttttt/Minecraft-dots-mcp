@@ -137,7 +137,7 @@ try {
   const first = launch(['runtime/minecraft-client.mjs', '--attach', daemonDir, '--state-dir', firstDir]);
   await until(() => existsSync(join(firstDir, 'controller-status.json')), 'first controller attached');
   const initial = json(join(firstDir, 'controller-status.json'));
-  assert.equal(initial.frontendVersion, '3.1.1-rc.2');
+  assert.equal(initial.frontendVersion, '3.2.0-rc.3');
   const backendPid = initial.daemon.backend.pid;
   assert.notEqual(call(launcherRoot, 'get-position').isError, true);
   assert.notEqual(call(launcherRoot, 'stop-movement').isError, true);
@@ -164,7 +164,7 @@ try {
   const next = json(join(secondDir, 'controller-status.json'));
   assert.equal(next.daemon.backend.pid, backendPid);
   assert.equal(next.daemon.sessionId, initial.daemon.sessionId);
-  assert.equal(next.daemon.backend.server.version, '3.1.1-rc.2');
+  assert.equal(next.daemon.backend.server.version, '3.2.0-rc.3');
   assert.notEqual(call(launcherRoot, 'get-position').isError, true);
   second.kill('SIGTERM'); await until(() => done(second), 'controller signal detach');
   assert.equal(done(daemon), false);

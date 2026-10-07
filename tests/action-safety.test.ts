@@ -23,7 +23,8 @@ function harness(bot: unknown = {}) {
     if (!tool) throw new Error(`Missing tool ${name}`);
     return tool.args[3](args);
   };
-  return { factory, connection, invoke, getBot: () => bot as Bot };
+  const eventBot = bot instanceof EventEmitter ? bot : Object.assign(new EventEmitter(), bot);
+  return { factory, connection, invoke, getBot: () => eventBot as unknown as Bot };
 }
 
 function deferred<T = void>() {

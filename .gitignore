@@ -20,3 +20,6 @@ private-config*.json
 config.local.*
 coverage/
 .DS_Store
+
+# Native viewer generated cache
+.godot/

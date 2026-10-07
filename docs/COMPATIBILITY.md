@@ -4,8 +4,8 @@ Target: Minecraft Java 1.21.1, protocol 767, offline protocol identity through a
 
 ## Independent versions
 
-- Package/backend version: currently 3.1.1-rc.2
-- Frontend/controller version: currently 3.1.1-rc.2
+- Package/backend version: currently 3.2.0-rc.3
+- Frontend/controller version: currently 3.2.0-rc.3
 - Local IPC protocol version: 1, checked during attachment
 - Tool schemas: CAPABILITIES.json, regenerated from the networkless fixture
 
@@ -48,16 +48,49 @@ doors are outside this repair. A door closing after planning is still a real
 physics obstacle; the next search rejects it. The adapter does not add automatic
 reopening or change upstream block-state invalidation.
 
-The separate native `goto` and `get_path_to` tools do not use this helper and
-are not changed. Tool names, descriptions, argument schemas, response format,
-15-second default / 60-second maximum movement timeout, action serialization,
-IPC and dependency locks are unchanged. Offline fixtures use the repository's
+Since 3.2.0-rc.1 the native `goto` also uses this helper, with a maximum 60-second
+timeout and the conservative dry/oxygen movement policy. `get_path_to` remains
+a read-only dry-profile estimate without the temporary door adapter, so its
+`noPath` may differ from verified `goto`. The existing action serialization and
+IPC remain unchanged; additive tool schemas and dependency locks are published
+with this candidate. See [movement safety](MOVEMENT-SAFETY.md). Offline fixtures use the repository's
 locked Minecraft 1.21.1 data and actual A*/collision/controller implementations;
 they do not establish real-server acceptance of this implementation.
 
+## Additive ecosystem candidate (3.2.0-rc.3)
+
+IPC remains version 1. New session-only workflow tools and the optional
+`--observe-port` startup flag are additive. `get-session-status` adds an `observer`
+field (`null` when disabled). An already running backend does not acquire new
+flags, tools or dependencies by replacing a frontend. Launching the observer
+requires a new explicitly authorized backend startup; no automatic migration,
+controller replay, listener exposure or deployment is performed.
+
+The observer uses the existing bot, binds only `127.0.0.1`, filters sensitive text
+and block-entity/item NBT, and cannot dispatch gameplay. Bounded workflows retain
+existing authority/fence rules and add revision-checked, one-batch-at-a-time plans.
+See [observation](READONLY-OBSERVER.md) and [workflows](WORKFLOWS.md).
+
+## Own-player air correction (3.2.0-rc.2)
+
+Guarded reports add `oxygenEvidence`; `oxygen` can be null until raw metadata
+for the current player has been observed. Unattributed upstream breath/cache
+values are not evidence. Existing numeric consumers must handle unknown rather
+than substitute full air. This is a safety correction within IPC 1; it requires
+a newly started backend, and does not authorize automatic rescue or reconnect.
+
+## Native file observation (3.2.0-rc.3)
+
+`--observe-world-files` is an additive default-off boolean startup flag.
+`get-session-status` adds `worldObserver` (null when disabled). The loaded-cell
+file and mesh schemas are each version 1 and retain an absolute five-second
+observation expiry. They are read-only outputs, not gameplay IPC or controls.
+Godot is an optional separately installed graphical dependency; it is not bundled
+or started by the backend. Existing sessions are not hot-upgraded.
+
 ## Change policy
 
-Schema or semantic changes require a documented compatibility decision, regression fixture and maintainer review. Breaking tool/IPC contracts require a version boundary and migration notes. Do not infer compatibility solely from matching tool names or package version. The public candidate is 3.1.1-rc.2 so it cannot be confused with the historical base.
+Schema or semantic changes require a documented compatibility decision, regression fixture and maintainer review. Breaking tool/IPC contracts require a version boundary and migration notes. Do not infer compatibility solely from matching tool names or package version. The public candidate is 3.2.0-rc.3 so it cannot be confused with the historical base.
 
 ## Verification boundaries
 

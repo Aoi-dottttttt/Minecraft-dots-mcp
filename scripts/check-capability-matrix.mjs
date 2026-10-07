@@ -15,7 +15,7 @@ for (const row of rows) {
   assert.ok(row[2].trim().length > 0, 'Every tool needs a family');
   assert.equal(Boolean(row[4]), row[3] === 'dedicated-fixture', 'Only dedicated-fixture rows reference a test');
   if (row[4]) {
-    assert.match(row[4], /^(tests|scripts)\/[A-Za-z0-9_./-]+\.(ts|mjs)$/);
+    assert.match(row[4], /^(tests|scripts)\/[A-Za-z0-9_./-]+\.(ts|mjs|cjs)$/);
     assert.ok(!row[4].split('/').includes('..'));
     assert.ok(statSync(fileURLToPath(new URL(row[4], root))).isFile(), 'Referenced fixture must exist');
   }

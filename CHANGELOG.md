@@ -1,5 +1,30 @@
 # Changelog
 
+## 3.2.0-rc.3: optional bounded native 3D reconstruction
+
+- Add a default-off `--observe-world-files` startup flag on the existing bot, exporting only a private, bounded set of loaded block states/light/biomes every two seconds
+- Reuse the pinned official Prismarine geometry and atlas in a file-only Godot view with local camera controls, crop/unknown indicators, and enforced stale clearing
+- Bound file sizes, vertices and cadence; reject links, special files and out-of-range geometry; preserve the original observation lease through all consumers
+- Add source/privacy guards, real FIFO regressions and synthetic native pixel CI with an exact SHA-pinned official Godot build
+- This is a limited reconstruction, not a native Minecraft client screenshot, full-world viewer or proof of live swimming/workflow acceptance
+
+## 3.2.0-rc.2: own-player air evidence and native status window
+
+- Fix oxygen provenance: the pinned entity plugin can report other entities' air as the player's. Guarded navigation, surfacing and reports now use raw current-player protocol metadata only, with explicit unknown/age/revision information and lifecycle invalidation
+- Add a file-only Tk status/inventory window using existing authoritative reports and official item textures. It starts no connection and shows stale or unverified observations explicitly
+- Add locked-plugin/protocol regression coverage and native parser safety fixtures; retain all reachability and exact-inventory guards
+- This candidate is separate from deployment. Swimming/boats and gather closed-loop acceptance remain unestablished; native 3D is not included
+
+## 3.2.0-rc.1: bounded ecosystem integration candidate
+
+- Add an opt-in, loopback-only status/inventory dashboard and Prismarine 3D reconstruction sharing the existing bot; drop all browser gameplay input and remove private text/NBT from observations
+- Add conservative dry navigation and explicit oxygen/surfacing and boat-launch checks, with special-terrain fixtures; retain bounded actions, no automatic digging/building and no autonomous rescue claim
+- Add session-local, explicitly stepped gather → storage → restock and bounded simple-block schematic plans, using a minimal MIT upstream state-machine core and `prismarine-schematic`; no automatic resume/replay or full autonomous farm/builder claim
+- Correct workstation evidence labels and remove the disabled screenshot recommendation from the map tool
+- Pin observation dependencies, retain all upstream notices, and add HTTP/socket/worker and synthetic-browser CI checks
+
+This is a source/PR candidate. It has not been merged, installed into a live backend, or accepted on a real server. IPC remains version 1; existing backend code is unchanged until the user explicitly starts a new authorized session. See VALIDATION.json and exact-commit CI for completed and blocked checks.
+
 ## 3.1.1-rc.2: verified maintenance candidate
 
 - Verify detach cancellation across both IPC rejection and settled backend inventory-fence rejection, with no-motion and no-extra-click assertions
