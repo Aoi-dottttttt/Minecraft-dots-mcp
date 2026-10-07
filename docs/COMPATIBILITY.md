@@ -200,12 +200,19 @@ stable pose: a moving/falling player must settle and be inspected before another
 attempt. Matching the clicked point and retaining that pose ensure the public
 `placeBlock`'s internal look does not initiate a second turn after these checks.
 
-The native one-tick wait has a 5050 ms timeout. The serialized action lane stays
+The native one-tick wait has a 5050 ms timeout; the integrated guarded runtime
+overrides this with its 5100 ms bounded tick wait. The serialized action lane stays
 occupied until preparation settles; timeout or cancellation does not leave a
 pending placement that can fire on a later tick. Server-authoritative block
 confirmation, exact one-item debit requirements for placement provenance,
 uncertainty fences and no automatic retry remain unchanged. An absent inventory
 debit cannot grant provenance even when the block effect is confirmed.
+
+In V2, damage requesting defense during pre-placement aiming is checked before
+submitting the public `placeBlock` call, so an unsubmitted placement stops.
+Damage after submission does not abort the critical operation: its block and
+inventory evidence settles first, then defense may acquire the shared lane.
+Neither case retries or resumes construction automatically.
 
 The neutral offline fixture loads the actual locked physics, generic-place and
 public place-block plugins. It verifies all six clicked-face centers, rotation

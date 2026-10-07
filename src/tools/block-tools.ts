@@ -98,6 +98,7 @@ export function registerBlockTools(factory: ToolFactory, getBot: () => mineflaye
           // Navigation and the rotation tick can both invalidate preparation.
           // Snapshot primitives: Mineflayer can mutate the same objects in place.
           const validate = () => {
+            options.checkInterrupt?.();
             options.signal?.throwIfAborted();
             if (getBot() !== bot || bot._client !== client || client.state !== clientState || bot.game?.dimension !== dimension ||
               bot.health <= 0 || (bot as mineflayer.Bot & { isAlive?: boolean }).isAlive === false) {
@@ -196,6 +197,9 @@ export function registerBlockTools(factory: ToolFactory, getBot: () => mineflaye
           const deadline = Date.now() + 3000;
           try {
             await withServerBlockConfirmation(bot, placePos, stateId => bot.registry.blocksByStateId[stateId]?.id === expectedBlock.id, () => {
+              // Honor requested defense before submitting the public placement.
+              // Once submitted, retain the lane until confirmation settles.
+              options.checkInterrupt?.();
               options.signal?.throwIfAborted();
               placement?.arm();
               return bot.placeBlock(currentReference, clickedFace);

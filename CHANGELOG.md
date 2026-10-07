@@ -6,6 +6,7 @@
 - Integrate native placement rotation ordering and stale-pose checks from PR #7, preserving rc.3/V2 navigation cancellation
 - Integrate supported partial-block completion from PR #8 while preserving dry-land/oxygen guards, native goto coverage and V2 interruption ownership
 - Add cross-version fixture coverage for waterlogged refusal, aborted navigation and policy restoration
+- Refuse an unsubmitted placement when V2 defense is requested during aiming; retain critical confirmation after submission
 
 ## Unreleased: ranged-defense V2 review patch
 

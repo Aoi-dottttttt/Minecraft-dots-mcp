@@ -10,6 +10,10 @@ import type { BotConnection } from '../src/bot-connection.js';
 import { ToolFactory } from '../src/tool-factory.js';
 import { registerBlockTools } from '../src/tools/block-tools.js';
 import { installPlacementProvenance } from '../src/placement-provenance.js';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { registerCompleteControls } from '../src/complete-controls.js';
 import { inventoryFixture } from './helpers/inventory-fixture.js';
 
 const require = createRequire(import.meta.url);
@@ -265,5 +269,47 @@ for (const fault of ['cancel-nudge', 'ineffective-nudge', 'ineffective-restore']
     t.false(s.packets.some(packet => packet.name === 'block_place'));
     t.false(s.ledger.has(s.target));
     t.is(forcedCalls, fault === 'ineffective-restore' ? 3 : 2, 'cancellation never initiates a cleanup look');
+  });
+}
+
+for (const damageTiming of ['preparation', 'submitted'] as const) {
+  test.serial(`V2 defense requested during placement ${damageTiming} respects the submission boundary`, async t => {
+    const s = fixture();
+    const root = await mkdtemp(join(tmpdir(), 'placement-defense-fixture-'));
+    Object.assign(s.bot, { entities: {} });
+    Object.assign(s.bot.entity, { id: 1 });
+    const complete = await registerCompleteControls({ bot: s.bot, server: { tool() {} }, factory: s.factory,
+      fixture: true, markRead() {}, legacy: new Map(), stateRoot: root });
+    t.teardown(async () => { complete.selfDefense.dispose(); s.cleanup(); await rm(root, { recursive: true, force: true }); });
+    complete.selfDefense.enable();
+    const handlers = new Map<string, (args: object) => Promise<unknown>>();
+    const legacyFactory = {
+      registerTool(name: string, _description: string, _schema: object, handler: (args: object) => Promise<unknown>) { handlers.set(name, handler); },
+      createResponse: s.factory.createResponse.bind(s.factory),
+      createErrorResponse: s.factory.createErrorResponse.bind(s.factory)
+    } as unknown as ToolFactory;
+    registerBlockTools(legacyFactory, () => s.bot, complete.getOptions);
+    const damage = () => { s.bot._client.emit('damage_event', { entityId: 1, sourceCauseId: 0, sourceDirectId: 0 }); };
+    if (damageTiming === 'preparation') s.bot.once('physicsTick', damage);
+    else {
+      const write = s.bot._client.write.bind(s.bot._client);
+      s.bot._client.write = (name, data) => { write(name, data); if (name === 'block_place') damage(); };
+    }
+    let signal: AbortSignal | undefined;
+    const task = s.factory.runInActionLane(() => complete.runAction(async () => {
+      signal = complete.getOptions().signal;
+      return handlers.get('place-block')!({ ...s.target, faceDirection: 'down' });
+    }, 'place-block')).catch(error => error as Error);
+    await s.clock.tickAsync(100);
+    const result = await task;
+    t.true(result instanceof Error);
+    t.regex((result as Error).message, /self-defense/);
+    if (damageTiming === 'submitted') t.false(signal!.aborted, 'defense does not abort a critical submitted operation');
+    const expected = damageTiming === 'preparation' ? 0 : 1;
+    t.is(s.packets.filter(packet => packet.name === 'block_place').length, expected);
+    t.is(s.ledger.has(s.target), damageTiming === 'submitted');
+    t.is(s.authority.fence, null);
+    await s.clock.tickAsync(100);
+    t.is(s.packets.filter(packet => packet.name === 'block_place').length, expected, 'no delayed placement or replay');
   });
 }
