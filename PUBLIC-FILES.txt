@@ -25,6 +25,7 @@ docs/CAPABILITY-MATRIX.md
 docs/COMPATIBILITY.md
 docs/MOVEMENT-SAFETY.md
 docs/READONLY-OBSERVER.md
+docs/SELF-DEFENSE.md
 docs/UPGRADING.md
 docs/WORKFLOWS.md
 docs/WORLD-MESH-PROTOTYPE.md
@@ -64,6 +65,7 @@ scripts/smoke-observer-runtime.mjs
 scripts/smoke-protocol.mjs
 scripts/smoke-public-hardening.mjs
 scripts/smoke-runtime.mjs
+scripts/smoke-self-defense.mjs
 scripts/smoke-stdio.mjs
 scripts/smoke-world-file-runtime.mjs
 scripts/test-fenced-plain-chat.mjs
@@ -73,7 +75,9 @@ scripts/test-native3d-relay.py
 scripts/test-observer-browser.mjs
 scripts/test-observer-ui.py
 scripts/test-observer-worker.mjs
+scripts/test-self-defense-broker.mjs
 scripts/world-mesh-sidecar.mjs
+src/action-interruption.ts
 src/blueprint-plan.ts
 src/book-observation.ts
 src/bot-connection.ts
@@ -90,6 +94,7 @@ src/movement-safety.ts
 src/oxygen-authority.ts
 src/placement-provenance.ts
 src/readonly-observer.ts
+src/self-defense.ts
 src/stdio-filter.ts
 src/survival-interactions.ts
 src/tool-factory.ts
@@ -158,6 +163,7 @@ tests/reviewer-complete-controls.test.ts
 tests/reviewer-crafting.test.ts
 tests/reviewer-recipes.test.ts
 tests/reviewer-window-preflight.test.ts
+tests/self-defense.test.ts
 tests/special-terrain-navigation.test.cjs
 tests/stdio-filter.test.ts
 tests/survival-interactions.test.ts

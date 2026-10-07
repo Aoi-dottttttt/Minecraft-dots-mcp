@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased: ranged-defense V2 review patch
+
+- Replace one shield pulse followed by permanent disable with renewable eight-second quiet leases (including visible already-attributed threats after successful blocks), continuous server-attributed facing and a 2.5-second pulse-loss watchdog
+- Keep active combat bounded to 12 seconds/16 attacks and movement to three fully loaded same-level steps inside a four-block origin leash; no digging, placement, doors, jumps, liquids, ladders or blind pursuit
+- Use ordinary backwards/sideways controls while keeping the shield aimed at the source instead of allowing pathfinder to turn away during retreat
+- Select only an already held/observed hotbar weapon under damage; require equipment preparation before enable rather than performing storage swaps mid-combat
+- Accept only same-item/count/components, fresh server-confirmed monotonic wear on unrelated armor slots during verified equipment transfers; preserve all transferred-slot, cursor and fence checks
+- Expose shield requests separately from effect confirmation, source uncertainty, multiple attackers, shield cooldown/breakage, armor loss and exhausted escape options
+- Add deterministic before/after regressions, pinned protocol shield packets and locked-physics directional fixtures; V2 live effectiveness remains unvalidated
+
+## Unreleased: bounded reactive self-defense review patch
+
+- Add explicit session-only enable/disable/status controls, default off, using server damage-source evidence and a strict protected-target filter
+- Run bounded verified equipment, cooldown melee, shielding and conservative observed-route retreat on the existing shared action lane
+- Interrupt only safe navigation/movement/dig scopes; drain inventory and submitted placement, report interrupted construction, preserve fences and never replay
+- Give manual stop/lifecycle invalidation priority and reject stale queued enables; distinguish observed target death from disappearance
+- Add offline regressions and document unvalidated live combat and deployment requirements in `docs/SELF-DEFENSE.md`
+
 ## 3.2.0-rc.3: optional bounded native 3D reconstruction
 
 - Add a default-off `--observe-world-files` startup flag on the existing bot, exporting only a private, bounded set of loaded block states/light/biomes every two seconds

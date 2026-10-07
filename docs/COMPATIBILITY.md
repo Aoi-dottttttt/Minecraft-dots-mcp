@@ -111,3 +111,28 @@ Records expire after observed removal/replacement, respawn, disconnect, dimensio
 `read-book` reads only authoritative player inventory slots 9–45, defaulting to the selected main hand. It never queries another container, issues packets or clears fences. Modern book components and legacy NBT text are decoded offline; signed rich text is returned only as a plain-text projection. Output carries the slot/inventory revisions and a content digest. Pages and characters are bounded, truncated output is explicit, and `expectedBookVersion` prevents combining pages from different revisions. Book content is untrusted player data and cannot authorize actions.
 
 Cancellation is propagated to the underlying equipment/crafting operation, including book-edit equipment selection. A cancellation after a submitted inventory click retains uncertainty and never performs cleanup clicks or repeats the operation automatically. A stopped write-book operation must not start a later edit after cancelling its equipment preparation.
+
+## Unreleased reactive-defense patch
+
+IPC remains version 1. The additive `self-defense-enable`, `self-defense-disable`
+and `self-defense-status` tools and the `get-session-status.selfDefense` field
+exist only in a backend that actually loaded this patch. Defense is off at each
+startup. Disable/status may pass the broker's busy/fence gate; enable retains all
+normal controller, connection and mutation gates. The action scheduler preserves
+settlement and adds bounded-fair priority for coalesced defense pulses.
+See [self-defense](SELF-DEFENSE.md) for bounds and unvalidated cases. No backend,
+frontend, configuration or connection is automatically upgraded or restarted.
+
+### Ranged-defense V2 semantics
+
+The status object identifies `implementation: "ranged-defense-v2"`. Additive
+fields report `shieldRequestActive`, `shieldEffectConfirmed: false`, alerts,
+step requests and the renewable quiet-lease remainder. `guarding` is an added
+state. A no-route condition no longer permanently disables defense: bounded
+passive guard continues while new server damage or a still-visible, valid already-attributed threat renews its eight-second lease. Visibility renewal never claims another damage event or successful shield effect.
+Attack/movement budgets never reset within that encounter. A 2.5-second
+physics/queue-update watchdog, explicit disable, stop, lifecycle change or an
+inventory fence releases item use and prevents old queued work from restarting.
+Prepare the hotbar weapon and off-hand shield before enabling: V2 never performs
+a storage equipment swap in response to damage. This changes tactical semantics
+without changing IPC version or enabling an old backend automatically.

@@ -27,7 +27,7 @@ const air = new Set(['air', 'cave_air', 'void_air']);
 const GATHER_BLOCKS: Record<string, string> = { dirt: 'dirt', grass_block: 'dirt', stone: 'cobblestone', cobblestone: 'cobblestone', granite: 'granite', diorite: 'diorite', andesite: 'andesite', deepslate: 'cobbled_deepslate', cobbled_deepslate: 'cobbled_deepslate' };
 
 type Options = { bot: Bot; facade: any; factory: any; server: any; markRead(name: string): void;
-  runAction<T>(operation: () => Promise<T>): Promise<T>; settings(): { signal?: AbortSignal }; abortAction(): void;
+  runAction<T>(operation: () => Promise<T>): Promise<T>; settings(): { signal?: AbortSignal; enterInterruptible?: () => () => void; checkInterrupt?: () => void }; abortAction(): void;
   legacy(name: string, args: any): Promise<any> };
 
 /** Adapts existing verified primitives; never creates another bot/controller. */
@@ -39,14 +39,14 @@ export function registerWorkflowTools(options: Options): { names: string[]; canc
   const dimensions = new Map<string, string>();
   let runningDimension: string | undefined;
   const ready = (signal: AbortSignal): void => {
-    signal.throwIfAborted(); authority.assertMutationReady();
+    options.settings().checkInterrupt?.(); signal.throwIfAborted(); authority.assertMutationReady();
     if (dimension() !== runningDimension) throw Error('Workflow dimension changed; create a new plan after inspection');
     if (bot.health < 10 || bot.food < 6) throw Error('Workflow paused by low health or hunger; inspect before a new plan');
   };
   const move = async (position: Position, distance: number, signal: AbortSignal): Promise<void> => {
     ready(signal);
     if (bot.entity.position.distanceTo(vec(position)) > 64) throw Error('Workflow step is outside the 64-block local bound');
-    await moveAndVerify(bot, new pathfinder.goals.GoalNear(position.x, position.y, position.z, distance), 15000, { signal });
+    await moveAndVerify(bot, new pathfinder.goals.GoalNear(position.x, position.y, position.z, distance), 15000, { ...options.settings(), signal });
     ready(signal);
   };
   const executor = async (step: WorkflowStep, signal: AbortSignal): Promise<Record<string, unknown>> => {

@@ -9,6 +9,8 @@ import type { Bot } from 'mineflayer';
 import { Vec3 } from 'vec3';
 import { z } from 'zod';
 import { ToolFactory } from './tool-factory.js';
+import { SelfDefense } from './self-defense.js';
+import { interruptible } from './action-interruption.js';
 import { getInventoryAuthority } from './inventory-authority.js';
 import { equipVerified } from './verified-inventory.js';
 import { craftVerified } from './verified-crafting.js';
@@ -37,9 +39,9 @@ const json = (value:any) => ({content:[{type:'text' as const,text:JSON.stringify
 const modules = (path:string) => import(new URL(`../vendor/awesome-mineflayer-mcp/dist/${path}.js`,import.meta.url).href);
 type ToolDef = {name:string;group:string;description:string;inputSchema?:Record<string,any>;annotations?:{readOnlyHint?:boolean};handler:(args:any,ctx:any)=>any};
 type Options = {server:any;factory:ToolFactory;bot:Bot;fixture?:boolean;markRead:(name:string)=>void;legacy:Map<string,(args:any)=>Promise<any>>;stateRoot:string};
-type Action = {controller:AbortController;pending:Set<Promise<any>>;evidence:Array<Record<string,any>>};
+type Action = {label:string;interruptible:boolean;defenseRequested:boolean;controller:AbortController;pending:Set<Promise<any>>;evidence:Array<Record<string,any>>};
 
-export async function registerCompleteControls(options:Options):Promise<{names:string[];stop:()=>Promise<void>;getOptions:()=>interactions.InteractionOptions;runAction:<T>(operation:()=>Promise<T>)=>Promise<T>}> {
+export async function registerCompleteControls(options:Options):Promise<{names:string[];stop:()=>Promise<void>;getOptions:()=>interactions.InteractionOptions;selfDefense:SelfDefense;runAction:<T>(operation:()=>Promise<T>,label?:string)=>Promise<T>}> {
   const {bot,factory,server}=options;
   const raw = bot as any;
   const authority=getInventoryAuthority(bot);
@@ -57,14 +59,29 @@ export async function registerCompleteControls(options:Options):Promise<{names:s
   let current:Action|undefined, autoEnabled=false, autoPending=false, lastAuto=0, lastChat=0;
   const names:string[]=[];
   process.env.AWESOME_MINEFLAYER_MCP_HOME=options.stateRoot;
-  const settings=()=>({signal:lane.getStore()?.controller.signal,timeoutMs:5000});
+  let selfDefense:SelfDefense|undefined;
+  function cancelForDefense(a:Action):void {
+    a.controller.abort(new Error('Interrupted for self-defense; inspect before new work; no automatic resume or replay'));
+    raw.pathfinder?.setGoal(null);raw.stopDigging?.();raw.clearControlStates?.();
+  }
+  function checkInterrupt():void {
+    const a=lane.getStore();
+    if(a?.defenseRequested)throw Error('Interrupted for self-defense after the submitted operation settled; inspect before new work; no automatic resume or replay');
+  }
+  function enterInterruptible():()=>void {
+    const a=lane.getStore();if(!a)return ()=>{};
+    const prior=a.interruptible;a.interruptible=true;
+    if(a.defenseRequested)cancelForDefense(a);
+    return ()=>{a.interruptible=prior;};
+  }
+  const settings=()=>{checkInterrupt();return {signal:lane.getStore()?.controller.signal,timeoutMs:5000,enterInterruptible,checkInterrupt};};
   function note(value:Record<string,any>):void { lane.getStore()?.evidence.push(value); }
   function tracked<T>(promise:Promise<T>):Promise<T> {
     const a=lane.getStore();
     if(a){a.pending.add(promise);void promise.catch(()=>{});}
     return promise;
   }
-  function assertLive():void { authority.assertMutationReady();settings().signal?.throwIfAborted(); }
+  function assertLive():void { authority.assertMutationReady();settings().signal?.throwIfAborted();checkInterrupt(); }
   async function legacy(name:string,args:any):Promise<any> {
     assertLive();
     const action=options.legacy.get(name);if(!action)throw Error(`Missing compatibility operation ${name}`);
@@ -139,7 +156,7 @@ export async function registerCompleteControls(options:Options):Promise<{names:s
   function entityAllowed(entity:any):void {if(!entity||entity===bot.entity||entity.type==='player'||entity.username)throw Error('This survival action cannot target a player');}
   const safePathfinder=new Proxy(raw.pathfinder??{}, {get(target,key){
     if(key==='setMovements')return (movement:any)=>{constrainMovements(bot,movement);return target.setMovements(movement);};
-    if(key==='goto')return (goal:any)=>tracked(moveAndVerify(bot,goal,60000,settings()));
+    if(key==='goto')return (goal:any,timeoutMs=60000)=>tracked(moveAndVerify(bot,goal,timeoutMs,settings()));
     const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;
   }});
   const facade:any=new Proxy(raw,{get(target,key){
@@ -196,7 +213,7 @@ export async function registerCompleteControls(options:Options):Promise<{names:s
       if((opts.equipOldItem??raw.autoEat.opts.returnToLastItem)&&held){const old=authority.items().find(i=>authority.same(i,held,false));if(old)await raw.equip(old,offhand?'off-hand':'hand');}
       return {confirmed:true};
     };
-    const pvpAttack=raw.pvp.attack.bind(raw.pvp);raw.pvp.attack=(target:any)=>{entityAllowed(target);return pvpAttack(target);};
+    const pvpAttack=raw.pvp.attack.bind(raw.pvp);raw.pvp.attack=(target:any)=>{if(selfDefense?.isEnabled)throw Error('Disable reactive defense before starting a separate PVP controller');entityAllowed(target);return pvpAttack(target);};
     // Armor manager installs an unsolicited pickup auto-equip callback. Retain
     // its equipAll implementation but suppress this callback; explicit calls
     // run in the shared lane instead.
@@ -206,10 +223,10 @@ export async function registerCompleteControls(options:Options):Promise<{names:s
   const manager={requireBot:()=>facade,botOrNull:()=>facade,get status(){return authority.ended?'disconnected':'online';},snapshot:()=>({status:authority.ended?'disconnected':'online',username:'MCPBot',version:bot.version})};
   const ctx={server,manager,events,windows,locks};windows.attach(bot);wireBotEvents(bot,events);
   let workflowControls:ReturnType<typeof registerWorkflowTools>|undefined;
-  async function stop():Promise<void>{workflowControls?.cancelAll();current?.controller.abort();autoEnabled=false;locks.cancelAll('manual');raw.pathfinder?.setGoal(null);raw.pathfinder?.stop();raw.stopDigging?.();raw.clearControlStates?.();if(raw.deactivateItem)interactions.stopHeldItem(bot);raw.pvp?.forceStop?.();await Promise.resolve(raw.collectBlock?.cancelTask?.()).catch(()=>{});raw.autoEat?.cancelEat?.();}
+  async function stop():Promise<void>{selfDefense?.disable('manual_stop');workflowControls?.cancelAll();current?.controller.abort();autoEnabled=false;locks.cancelAll('manual');raw.pathfinder?.setGoal(null);raw.pathfinder?.stop();raw.stopDigging?.();raw.clearControlStates?.();if(raw.deactivateItem)interactions.stopHeldItem(bot);raw.pvp?.forceStop?.();await Promise.resolve(raw.collectBlock?.cancelTask?.()).catch(()=>{});raw.autoEat?.cancelEat?.();}
   for(const event of ['death','end'])bot.on(event as any,()=>{void stop().catch(()=>{});});
-  const withAction=async(operation:()=>Promise<any>):Promise<{value:any;evidence:Array<Record<string,any>>}>=>{
-    assertLive();const a:Action={controller:new AbortController(),pending:new Set(),evidence:[]};current=a;
+  const withAction=async(operation:()=>Promise<any>,label='critical'):Promise<{value:any;evidence:Array<Record<string,any>>}>=>{
+    authority.assertMutationReady();if(label!=='self-defense'&&selfDefense?.busy)throw Error('Automatic self-defense is active; inspect its status before new work');const a:Action={label,interruptible:false,defenseRequested:false,controller:new AbortController(),pending:new Set(),evidence:[]};current=a;
     const timer=setTimeout(()=>{a.controller.abort();locks.cancelAll('manual');raw.pathfinder?.setGoal(null);raw.stopDigging?.();raw.clearControlStates?.();raw.deactivateItem?.();},120000);
     try{return await lane.run(a,async()=>{
       let value:any, failure:unknown;
@@ -218,13 +235,13 @@ export async function registerCompleteControls(options:Options):Promise<{names:s
       // throw after starting one. Drain new work added while settling too.
       while(a.pending.size){const pending=[...a.pending];a.pending.clear();const settled=await Promise.allSettled(pending);for(const item of settled)if(item.status==='rejected'&&failure===undefined)failure=item.reason;}
       if(failure!==undefined)throw failure;
-      a.controller.signal.throwIfAborted();return {value,evidence:a.evidence};
+      checkInterrupt();a.controller.signal.throwIfAborted();return {value,evidence:a.evidence};
     });}finally{clearTimeout(timer);if(current===a)current=undefined;}
   };
   const execute=async(def:ToolDef,input:any):Promise<any>=>{
     const args=z4.object(def.inputSchema??{}).strict().parse(input??{});
     if(def.annotations?.readOnlyHint)return dispatch(def,args);
-    const {value,evidence}=await withAction(()=>dispatch(def,args));
+    const {value,evidence}=await withAction(()=>dispatch(def,args),def.name);
     return {result:value,verification:{confirmed:value?.confirmed===true,evidence,inventorySequence:authority.sequence,note:'A returned request is not proof of its intended game effect. Only explicit confirmation/evidence establishes that effect.'}};
   };
   async function dispatch(def:ToolDef,args:any):Promise<any>{
@@ -253,8 +270,8 @@ export async function registerCompleteControls(options:Options):Promise<{names:s
       case 'furnace_status':return readFurnaceVerified(bot);
       case 'read_open_container':return readWindowVerified(bot);
       case 'close_window':return closeWindowVerified(bot);
-      case 'set_control_state': {raw.setControlState(args.control,args.state);if(args.state){try{await waitMs(args.durationMs??250,settings().signal);}finally{raw.setControlState(args.control,false);}}return {requested:true,stopped:true,position:bot.entity.position};}
-      case 'follow_entity':case 'set_goal':case 'flee_from': {const hazard=navigationHazard(bot);if(hazard)throw Error(hazard);try{await def.handler(args,ctx);await waitForDryMovement(bot,args.durationMs??3000,settings().signal);return {elapsed:true,position:bot.entity.position};}finally{raw.pathfinder.setGoal(null);raw.clearControlStates();}}
+      case 'set_control_state':return interruptible(settings(),async()=>{raw.setControlState(args.control,args.state);if(args.state){try{await waitMs(args.durationMs??250,settings().signal);}finally{raw.setControlState(args.control,false);}}return {requested:true,stopped:true,position:bot.entity.position};});
+      case 'follow_entity':case 'set_goal':case 'flee_from':return interruptible(settings(),async()=>{const hazard=navigationHazard(bot);if(hazard)throw Error(hazard);try{await def.handler(args,ctx);await waitForDryMovement(bot,args.durationMs??3000,settings().signal);return {elapsed:true,position:bot.entity.position};}finally{raw.pathfinder.setGoal(null);raw.clearControlStates();}});
       case 'autoeat_eat':await def.handler(args,ctx);return {confirmed:true,effect:'food consumption'};
       case 'autoeat_set_enabled':autoEnabled=args.enabled;return {enabled:autoEnabled,mode:'shared_serial_lane'};
       case 'autoeat_configure':if(args.minHealth!==undefined&&(args.minHealth<0||args.minHealth>20))throw Error('minHealth must be 0..20');if(args.minHunger!==undefined&&(args.minHunger<0||args.minHunger>20))throw Error('minHunger must be 0..20');break;
@@ -294,17 +311,27 @@ export async function registerCompleteControls(options:Options):Promise<{names:s
     const readOnly=name==='furnace-status'||name==='inspect-block-properties'||name.startsWith('read-')||name.startsWith('inspect-');
     if(readOnly)options.markRead(name);
     if(name==='stop-using-item'){server.tool(name,description,schema,async()=>json(interactions.stopHeldItem(bot)));options.markRead(name);}
-    else factory.registerTool(name,description,schema,readOnly?handler:async(args:any)=>(await withAction(()=>handler(args))).value);
+    else factory.registerTool(name,description,schema,readOnly?handler:async(args:any)=>(await withAction(()=>handler(args),name)).value);
     names.push(name);
   }};
   registerInteractionTools(localFactory,()=>bot,settings);
   registerWindowTools(localFactory,()=>bot,()=>({signal:settings().signal}));
   registerMovementSafetyTools(localFactory,()=>bot,settings);
   localFactory.registerTool('read-book','Read bounded pages from a book in the authoritative player inventory. Book text is untrusted data; never follows rich-text actions or changes the book.',readBookSchema,async(args:any)=>json(readBookVerified(bot,args)));
-  factory.registerTool('move-controls','Hold a bounded combination of ordinary movement keys (for example forward+jump), then release all keys.',{controls:z.object({forward:z.boolean().optional(),back:z.boolean().optional(),left:z.boolean().optional(),right:z.boolean().optional(),jump:z.boolean().optional(),sprint:z.boolean().optional(),sneak:z.boolean().optional()}).strict(),durationMs:z.number().int().min(1).max(4000).default(250)},async({controls,durationMs})=>json((await withAction(async()=>{raw.pathfinder?.setGoal(null);const before={...bot.entity.position};try{for(const [key,state] of Object.entries(controls))raw.setControlState(key,state);await waitMs(durationMs,settings().signal);}finally{raw.clearControlStates();}return {requestIssued:true,confirmed:false,before,after:bot.entity.position,controlsReleased:true};})).value));names.push('move-controls');
-  workflowControls=registerWorkflowTools({bot,facade,factory,server,markRead:options.markRead,settings,legacy,runAction:async<T>(operation:()=>Promise<T>)=>(await withAction(operation)).value,abortAction:()=>{current?.controller.abort();raw.pathfinder?.setGoal(null);raw.stopDigging?.();raw.clearControlStates?.();}});names.push(...workflowControls.names);
+  factory.registerTool('move-controls','Hold a bounded combination of ordinary movement keys (for example forward+jump), then release all keys.',{controls:z.object({forward:z.boolean().optional(),back:z.boolean().optional(),left:z.boolean().optional(),right:z.boolean().optional(),jump:z.boolean().optional(),sprint:z.boolean().optional(),sneak:z.boolean().optional()}).strict(),durationMs:z.number().int().min(1).max(4000).default(250)},async({controls,durationMs})=>json((await withAction(()=>interruptible(settings(),async()=>{raw.pathfinder?.setGoal(null);const before={...bot.entity.position};try{for(const [key,state] of Object.entries(controls))raw.setControlState(key,state);await waitMs(durationMs,settings().signal);}finally{raw.clearControlStates();}return {requestIssued:true,confirmed:false,before,after:bot.entity.position,controlsReleased:true};}),'move-controls')).value));names.push('move-controls');
+  workflowControls=registerWorkflowTools({bot,facade,factory,server,markRead:options.markRead,settings,legacy,runAction:async<T>(operation:()=>Promise<T>)=>(await withAction(operation,'run-workflow')).value,abortAction:()=>{current?.controller.abort();raw.pathfinder?.setGoal(null);raw.stopDigging?.();raw.clearControlStates?.();}});names.push(...workflowControls.names);
+  selfDefense=new SelfDefense({bot,facade,settings,
+    enqueue:operation=>factory.runInActionLane(operation,'defense'),
+    runAction:async operation=>(await withAction(operation,'self-defense')).value,
+    cancel:()=>{if(current?.label==='self-defense'){current.controller.abort();raw.pathfinder?.setGoal(null);raw.pathfinder?.stop();raw.clearControlStates?.();}},
+    interrupt:()=>{const a=current;if(!a||a.label==='self-defense')return null;a.defenseRequested=true;if(a.interruptible)cancelForDefense(a);return a.label;},
+    report:status=>events.push('self_defense',status)
+  });
+  factory.registerTool('self-defense-enable','Enable session-only, bounded reactive monster defense. Requires authoritative damage attribution; protects players, pets and named entities. Default off; ready equipment, continuous guarded facing and at most three verified level steps; no automatic reconnect, long pursuit or construction resume.',{},async()=>json(selfDefense!.enable()),()=>selfDefense!.captureEnableGuard());names.push('self-defense-enable');
+  server.tool('self-defense-disable','Disable automatic defense immediately and drain submitted work without replay. Does not cancel unrelated foreground inventory work.',{},async()=>{selfDefense!.disable();await factory.runInActionLane(async()=>{});return json(selfDefense!.snapshot());});names.push('self-defense-disable');
+  server.tool('self-defense-status','Read reactive defense state, bounded limits, interrupted work and exact outcome evidence. Missing targets are never reported as killed.',{},async()=>json(selfDefense!.snapshot()));options.markRead('self-defense-status');names.push('self-defense-status');
   options.markRead('list-gameplay-capabilities');factory.registerTool('list-gameplay-capabilities','List integrated ordinary-survival controls and verification boundaries.',{},async()=>json({upstreamCommit:UPSTREAM_COMMIT,tools:names,excluded:[...EXCLUDED_TOOLS],singleBot:true,version:bot.version,liveValidated:false}));names.push('list-gameplay-capabilities');
   factory.registerTool('game-command','Run only a typed, ordinary player command. No arbitrary slash input.',{action:z.enum(['help','list','message']),player:z.string().regex(/^[A-Za-z0-9_]{1,16}$/).optional(),message:z.string().max(180).optional()},async({action,player,message})=>{if(action==='message'){if(!player||!message||hasControl(message))throw Error('Valid player/message required');facade.whisper(player,message);}else{if(Date.now()-lastChat<4000)throw Error('Chat rate limit');lastChat=Date.now();raw.chat('/'+action);}return json({requestIssued:true,confirmed:false,action});});names.push('game-command');
   if(!options.fixture)bot.on('physicsTick',()=>{if(!autoEnabled||autoPending||current||authority.fence||authority.ended||Date.now()-lastAuto<1000)return;lastAuto=Date.now();const a=raw.autoEat;if(bot.food>(a?.opts?.minHunger??14)&&bot.health>(a?.opts?.minHealth??14))return;autoPending=true;void factory.runInActionLane(async()=>{if(!autoEnabled||authority.fence||authority.ended)return;await execute({name:'autoeat_eat',group:'survival',description:'',inputSchema:{},handler:()=>a.eat({equipOldItem:true})},{});}).catch((e:any)=>events.push('autoeat_error',{message:String(e.message)})).finally(()=>{autoPending=false;});});
-  return {names,stop,getOptions:settings,runAction:async<T>(operation:()=>Promise<T>):Promise<T>=>(await withAction(operation)).value};
+  return {names,stop,selfDefense,getOptions:settings,runAction:async<T>(operation:()=>Promise<T>,label='critical'):Promise<T>=>(await withAction(operation,label)).value};
 }

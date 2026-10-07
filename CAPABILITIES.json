@@ -5314,6 +5314,42 @@
       }
     },
     {
+      "name": "self-defense-enable",
+      "description": "Enable session-only, bounded reactive monster defense. Requires authoritative damage attribution; protects players, pets and named entities. Default off; ready equipment, continuous guarded facing and at most three verified level steps; no automatic reconnect, long pursuit or construction resume.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "self-defense-disable",
+      "description": "Disable automatic defense immediately and drain submitted work without replay. Does not cancel unrelated foreground inventory work.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "self-defense-status",
+      "description": "Read reactive defense state, bounded limits, interrupted work and exact outcome evidence. Missing targets are never reported as killed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
       "name": "list-gameplay-capabilities",
       "description": "List integrated ordinary-survival controls and verification boundaries.",
       "inputSchema": {

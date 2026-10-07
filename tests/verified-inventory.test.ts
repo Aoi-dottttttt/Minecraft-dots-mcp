@@ -218,3 +218,53 @@ test('merge-aware fixture models Vanilla partial filling and full-stack no-ops',
   t.is(s.authority.getFrame(0).slots[39]?.count, 64);
   t.is(s.authority.cursor?.count, 26);
 });
+
+for (const slot of [5, 6, 7, 8]) {
+  test(`unrelated armor slot ${slot} accepts only server-confirmed monotonic durability during exact swap`, async t => {
+    const names = ['iron_helmet', 'iron_chestplate', 'iron_leggings', 'iron_boots'];
+    const s = inventoryFixture([{ name: 'iron_axe', count: 1, slot: 17 }, { name: 'stone', count: 3, slot: 37 }, { name: names[slot - 5], count: 1, slot }]);
+    fragmented(s); s.bot.quickBarSlot = 1;
+    const write = s.bot._client.write.bind(s.bot._client);
+    s.bot._client.write = ((name: string, packet: unknown) => {
+      s.slots[slot].components = [{ type: 'damage', data: s.writes.length + 1 }];
+      write(name, packet);
+    }) as Bot['_client']['write'];
+    await equipVerified(s.bot, 17, 'hand', 30, { exactSource: true });
+    t.is(s.writes.length, 3); t.is(s.authority.cursor, null); t.is(s.authority.fence, null);
+    t.is(s.authority.getFrame(0).slots[37]?.name, 'iron_axe');
+  });
+}
+
+for (const change of ['repair', 'replacement', 'count', 'component', 'break', 'over_max', 'negative', 'fractional', 'duplicate_damage', 'rollback_then_restore']) {
+  test(`armor wear exception still fences ${change} during an unrelated transfer`, async t => {
+    const s = inventoryFixture([{ name: 'iron_axe', count: 1, slot: 17 }, { name: 'stone', count: 3, slot: 37 }, { name: 'iron_helmet', count: 1, slot: 5 }]);
+    const Item = require('prismarine-item')(s.bot.registry);
+    s.slots[5].components = [{ type: 'damage', data: 10 }]; s.sync(); s.bot.quickBarSlot = 1;
+    const write = s.bot._client.write.bind(s.bot._client);
+    s.bot._client.write = ((name: string, packet: unknown) => {
+      write(name, packet);
+      if (s.writes.length !== 1) return;
+      if (change === 'replacement') s.slots[5] = new Item(s.bot.registry.itemsByName.diamond_helmet.id, 1);
+      else if (change === 'count') s.slots[5].count = 2;
+      else if (change === 'break') s.slots[5] = null;
+      else s.slots[5].components = change === 'component' ? [{ type: 'damage', data: 11 }, { type: 'repair_cost', data: 1 }]
+        : change === 'duplicate_damage' ? [{ type: 'damage', data: 11 }, { type: 'damage', data: 12 }]
+        : [{ type: 'damage', data: change === 'repair' || change === 'rollback_then_restore' ? 9 : change === 'negative' ? -1 : change === 'fractional' ? 10.5 : 165 }];
+      s.sync();
+      if (change === 'rollback_then_restore') { s.slots[5].components = [{ type: 'damage', data: 11 }]; s.sync(); }
+    }) as Bot['_client']['write'];
+    await t.throwsAsync(equipVerified(s.bot, 17, 'hand', 30, { exactSource: true }), { message: /conservation/ });
+    t.truthy(s.authority.fence); t.is(s.authority.listenerCount('change'), 0);
+  });
+}
+
+test('armor transfer target itself never receives the unrelated durability exception', async t => {
+  const s = inventoryFixture([{ name: 'iron_helmet', count: 1, slot: 17 }]);
+  const write = s.bot._client.write.bind(s.bot._client);
+  s.bot._client.write = ((name: string, packet: unknown) => {
+    write(name, packet);
+    if (s.writes.length === 2) { s.slots[5].components = [{ type: 'damage', data: 1 }]; s.sync(); }
+  }) as Bot['_client']['write'];
+  await t.throwsAsync(equipVerified(s.bot, 17, 'head', 20), { message: /conservation|timed out/ });
+  t.truthy(s.authority.fence);
+});
